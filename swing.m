@@ -9,7 +9,8 @@ clear all; close all; clc
 f_0 = 50;
 H = 6;
 S_B = 115000;
-D_load = (1/1.5);
+k_load = 1.5;
+D_load = (1/k_load);
 %P_m = ;
 %P_load = ;
 P_delta = 3000;
@@ -18,10 +19,14 @@ P_loss = 0;
 A = -(f_0/(2*H*S_B*D_load))
 B = (f_0/(2*H*S_B))*(P_delta - P_loss)
 
-
+D_load/(H*H)
+D_load/0.7143
+.7143 * H
 
 % f = @(t,X) [X(2); X(1) - X(1).^3 - delta*X(2)]; % + X(1).^2*X(2)]; % IT  WORKED FOR THIS ONE
-f = @(t,X) [X(2); A*X(1)+B];
+%f = @(t,X) [X(2); A*X(1)+B];
+% function from http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=1086115
+f = @(t,X) [X(2); -0.7143*X(2) + 0.234 - 0.0633*sin(X(1) + 0.0405) - 0.582*sin(X(1) + 0.4103)];
 
 % To generate the phase portrait, we need to compute the derivatives $y_1'$ and $y_2'$ 
 % at $t=0$ on a grid over the range of values for $y_1$ and $y_2$ we are interested in. 
@@ -59,8 +64,8 @@ axis tight equal;
 %% PLOT SOLUTIONS
 
 hold on
-for y10 = [-1.5 -1 -0.5 0 0.5 1 1.5 2 2.5]
-for y20 =  [-1.5 -1 -0.5 0 0.5 1 1.5 2 2.5] %[0 0.5 1 1.5 2 2.5]
+for y10 = [-6 -5.5 -5 -4.5 -4 -3.5 -3 -2.5 -2 -1.5 -1 -0.5 0 0.5 1 1.5 2 2.5 3 3.5 4 4.5 5 5.5 6]
+for y20 =  [-2.5 -2 -1.5 -1 -0.5 0 0.5 1 1.5 2 2.5] %[0 0.5 1 1.5 2 2.5]
     [ts,ys] = ode45(f,[0,500],[y10;y20]); % [-0.5;y20] % t= 0.5 % [-1.5;y20]
     plot(ys(:,1),ys(:,2))
     ylim([-2.5, 2.5])
