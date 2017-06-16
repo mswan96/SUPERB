@@ -10,12 +10,13 @@ f_0 = 50;
 H = 6;
 S_B = 115;
 D_load = (1/1.5);
-P_m = ;
-P_load = ;
+%P_m = ;
+%P_load = ;
+P_delta = 3000;
 P_loss = 0;
 
-A = -(f_0/(2*H*S_B*D_load));
-B = (f_0/(2*H*S_B))*(P_m - P_load - P_loss);
+A = -(f_0/(2*H*S_B*D_load))
+B = (f_0/(2*H*S_B))*(P_delta - P_loss)
 
 
 
@@ -32,8 +33,8 @@ y1 = linspace(-2,2,50);
 y2 = linspace(-2,2,50);
 
 [x,y] = meshgrid(y1,y2);
-size(x)
-size(y)
+size(x);
+size(y);
 
 % computing the vector field
 
