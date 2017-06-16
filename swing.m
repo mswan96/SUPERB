@@ -8,7 +8,7 @@ clear all; close all; clc
 
 f_0 = 50;
 H = 6;
-S_B = 115;
+S_B = 115000;
 D_load = (1/1.5);
 %P_m = ;
 %P_load = ;
@@ -29,8 +29,8 @@ f = @(t,X) [X(2); A*X(1)+B];
 % direction from each point. We will examine the solutions over the range -2 < y1 < 8, and 
 % -2 < y2 < 2 for y2, and create a grid of 20x20 points.
 
-y1 = linspace(-2,2,50);
-y2 = linspace(-2,2,50);
+y1 = linspace(-6,6,50);
+y2 = linspace(-2.5,2.5,50);
 
 [x,y] = meshgrid(y1,y2);
 size(x);
@@ -44,6 +44,7 @@ v = zeros(size(x));
 % we can use a single loop over each element to compute the derivatives at
 % each point (y1, y2)
 t=0; % we want the derivatives at each point at t=0, i.e. the starting time
+
 for i = 1:numel(x)
     Yprime = f(t,[x(i); y(i)]);
     u(i) = Yprime(1);
@@ -62,8 +63,8 @@ for y10 = [-1.5 -1 -0.5 0 0.5 1 1.5 2 2.5]
 for y20 =  [-1.5 -1 -0.5 0 0.5 1 1.5 2 2.5] %[0 0.5 1 1.5 2 2.5]
     [ts,ys] = ode45(f,[0,500],[y10;y20]); % [-0.5;y20] % t= 0.5 % [-1.5;y20]
     plot(ys(:,1),ys(:,2))
-    ylim([-2, 2])
-    xlim([-2, 2])
+    ylim([-2.5, 2.5])
+    xlim([-6, 6])
     %plot(ys(1,1),ys(1,2),'bo') % starting point
     %plot(ys(end,1),ys(end,2),'ks') % ending point
 end
