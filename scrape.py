@@ -184,7 +184,7 @@ def processYear( year ):
 				totalRenew[i] += Renew[i]
 			for j in xrange(0, 5):
 				totalAll[j] += All[j]
-	
+	# Calculate averages for month
 	for k in xrange(0, 7):
 		avgRenew[k] = totalRenew[k]/days
 	for l in xrange(0, 5):
