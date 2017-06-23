@@ -3,8 +3,17 @@
 import requests, csv, sys, datetime
 import numpy as np
 
+                                              
+def is_number(s):
+	try:
+		float(s)
+		return True
+	except ValueError:
+		return False
+
+
 # Process one day and return averages for each type of generation
-def processDay( year, month, day ):
+def processDay (year, month, day):
 	# 20170619
 	i = datetime.datetime.now()
 
@@ -15,7 +24,7 @@ def processDay( year, month, day ):
 	if currDay == 1:  # Date wraps around to last day of last month
 		if currMonth == 3:  # Month before was February with 28 days
 			yesterday = 28
-		else if currMonth == (5 or 7 or 10 or 12):  # Month before had 30 days
+		elif currMonth == (5 or 7 or 10 or 12):  # Month before had 30 days
 			yesterday = 30
 		else:  # Month before had 31 days
 			yesterday = 31
@@ -37,94 +46,118 @@ def processDay( year, month, day ):
 
 	page = requests.get(url)
 
-	f = open("data.txt", "w")
-	f.write(str(page.content))
-	f.close()
+	if page.status_code == requests.codes.ok:
 
-	wR, hR = 8, 24
-	wA, hA = 6, 24
+		f = open('data.txt', 'r+')
+		f.write(str(page.content))
+		#print f.read()
+		f.close()
 
-	Renewables = np.empty([hR, wR])
-	All = np.empty([hA, wA])
-	#Renewables = [[None for x in range(wR)] for y in range(hR)]
-	#All = [[None for x in range(wA)] for y in range(hA)] 
+		wR, hR = 8, 24
+		wA, hA = 6, 24
 
-	rowCount = 0
-	lineCount = 0
+		Renewables = np.empty([hR, wR])
+		All = np.empty([hA, wA])
+		avgRenew = np.empty(7)
+		avgAll = np.empty(5)
+		#Renewables = [[None for x in range(wR)] for y in range(hR)]
+		#All = [[None for x in range(wA)] for y in range(hA)] 
 
+		rowCount = 0
+		lineCount = 0
 
-	with open("data.txt") as input:
-		for line in csv.reader(input, delimiter="\t"):
-			columnCount = 0;
-			isEmpty = 0
-			if lineCount > 1 and lineCount < 26:
-				for x in xrange(0,18):
-					if line[x] != '':
-						print "-------"
-						print rowCount, columnCount, line[x]
-						Renewables[rowCount][columnCount] = int(line[x])
-						print Renewables[rowCount][columnCount]
-						print "-------"
-						columnCount += 1
-						isEmpty = 1
-					else:
-						print "-------"
-						print rowCount, x, "no data"
-						print "-------"
-				if isEmpty == 1:
-					rowCount += 1
-			if lineCount > 29 and lineCount < (28+26):
-				for x in xrange(0,18):
-					if line[x] != '':
-						print "-------"
-						print rowCount - 25, columnCount, line[x]
-						All[rowCount-24][columnCount] = int(line[x])
-						print All[rowCount-25][columnCount]
-						print "-------"
-						columnCount += 1
-						isEmpty = 1
-					else:
-						print "-------"
-						print rowCount, x, "no data"
-						print "-------"
-				if isEmpty == 1:
-					rowCount += 1
-			lineCount += 1
+		geothermal = 0
+		biomass = 0
+		biogas = 0
+		smallHydro = 0
+		windTotal = 0
+		solarPV = 0
+		solarThermal = 0
+
+		renewablesTotal = 0
+		nuclear = 0
+		thermal = 0
+		imports = 0
+		hydro = 0
+
+		print date
+
+		with open("data.txt") as input:
+			for line in csv.reader(input, delimiter="\t"):
+				columnCount = 0;
+				isEmpty = 0
+				if lineCount > 1 and lineCount < 26:
+					for x in xrange(0,16):
+						if (line[x] != '' and line[x] != None):
+							#print "-------"
+							#print rowCount, columnCount, line[x]
+							if is_number(line[x]):
+								Renewables[rowCount][columnCount] = int(line[x])
+							else:
+								Renewables[rowCount][columnCount] = 0
+							#print Renewables[rowCount][columnCount]
+							#print "-------"
+							columnCount += 1
+							isEmpty = 1
+						#else:
+							#print "-------"
+							#print rowCount, x, "no data"
+							#print "-------"
+					if isEmpty == 1:
+						rowCount += 1
+				if lineCount > 29 and lineCount < (28+26):
+					for x in xrange(0,16):
+						if line[x] != '':
+							#print "-------"
+							#print rowCount - 24, columnCount, line[x]
+							if is_number(line[x]):
+								All[rowCount-24][columnCount] = int(line[x])
+							else: 
+								All[rowCount-24][columnCount] = 0
+							#print All[rowCount-24][columnCount]
+							#print "-------"
+							columnCount += 1
+							isEmpty = 1
+						#else:
+							#print "-------"
+							#print rowCount, x, "no data"
+							#print "-------"
+					if isEmpty == 1:
+						rowCount += 1
+				lineCount += 1
 	
-	for i in xrange(0, 24):
-		geothermal += Renewables[i][1]
-		biomass += Renewables[i][2]
-		biogas += Renewables[i][3]
-		smallHydro += Renewables[i][4]
-		windTotal += Renewables[i][5]
-		solarPV += Renewables[i][6]
-		solarThermal += Renewables[i][7]
+		for i in xrange(0, 24):
+			geothermal += Renewables[i][1]
+			biomass += Renewables[i][2]
+			biogas += Renewables[i][3]
+			smallHydro += Renewables[i][4]
+			windTotal += Renewables[i][5]
+			solarPV += Renewables[i][6]
+			solarThermal += Renewables[i][7]
 
-		renewablesTotal += All[i][1]
-		nuclear += [i][2]
-		thermal += [i][3]
-		imports += [i][4]
-		hydro += [i][5]
+			renewablesTotal += All[i][1]
+			nuclear += All[i][2]
+			thermal += All[i][3]
+			imports += All[i][4]
+			hydro += All[i][5]
 
-	#avgRenewables = np.empty([2, 7])
+		avgRenew[0] = geothermal/24
+		avgRenew[1] = biomass/24
+		avgRenew[2] = biogas/24
+		avgRenew[3] = smallHydro/24
+		avgRenew[4] = windTotal/24
+		avgRenew[5] = solarPV/24
+		avgRenew[6] = solarThermal/24
 
-	avgRenewables[0] = geothermal/24
-	avgRenewables[1] = biomass/24
-	avgRenewables[2] = biogas/24
-	avgRenewables[3] = smallHydro/24
-	avgRenewables[4] = windTotal/24
-	avgRenewables[5] = solarPV/24
-	avgRenewables[6] = solarThermal/24
-
-	avgAll[0] = renewablesTotal/24
-	avgAll[1] = nuclear/24
-	avgAll[2] = thermal/24
-	avgAll[3] = imports/24
-	avgAll[4] = hydro/24
-	# average[1][5] = None
-	# average[1][6] = None
-
-return avgRenewables, avgAll
+		avgAll[0] = renewablesTotal/24
+		avgAll[1] = nuclear/24
+		avgAll[2] = thermal/24
+		avgAll[3] = imports/24
+		avgAll[4] = hydro/24
+		
+		return avgRenew, avgAll
+	else:
+		return np.empty(7), np.empty(5)
 
 
 def processMonth( year, month ):
@@ -142,47 +175,53 @@ def processMonth( year, month ):
 
 	if month == currMonth:  # Only go up to current day
 		days = currDay
-		for d in xrange(1, currDay)
+		for d in xrange(1, currDay):
 			Renew, All = processDay(year, month, d)
-			for i in xrange(0, 7):
-				totalRenew[i] += Renew[i]
-			for j in xrange(0, 5):
-				totalAll[j] += All[j]
+			if (Renew.all() != None and All.all() != None):
+				for i in xrange(0, 7):
+					totalRenew[i] += Renew[i]
+				for j in xrange(0, 5):
+					totalAll[j] += All[j]
 
-	else if month == 4: # Finish April
+	elif month == 4: # Finish April
 		days = 10
 		for d in xrange(20, 31):
 			Renew, All = processDay(year, month, d)
-			for i in xrange(0, 7):
-				totalRenew[i] += Renew[i]
-			for j in xrange(0, 5):
-				totalAll[j] += All[j]
+			if (Renew.all() != None and All.all() != None):
+				for i in xrange(0, 7):
+					totalRenew[i] += Renew[i]
+				for j in xrange(0, 5):
+					totalAll[j] += All[j]
 			
-	else if month == 2:  # february has 28 days
+	elif month == 2:  # february has 28 days
 		days = 28
-		for d in xrange(1, 29)
+		for d in xrange(1, 29):
 			Renew, All = processDay(year, month, d)
-			for i in xrange(0, 7):
-				totalRenew[i] += Renew[i]
-			for j in xrange(0, 5):
-				totalAll[j] += All[j]
+			if (Renew.all() != None and All.all() != None):
+				for i in xrange(0, 7):
+					totalRenew[i] += Renew[i]
+				for j in xrange(0, 5):
+					totalAll[j] += All[j]
 
-	else if month == (6 or 9 or 11): # Months with 30 days
+	elif month == (6 or 9 or 11): # Months with 30 days
 		days = 30
-		for d in xrange(1, 31)
+		for d in xrange(1, 31):
 			Renew, All = processDay(year, month, d)
-			for i in xrange(0, 7):
-				totalRenew[i] += Renew[i]
-			for j in xrange(0, 5):
-				totalAll[j] += All[j]	
+			if (Renew.all() != None and All.all() != None):
+				for i in xrange(0, 7):
+					totalRenew[i] += Renew[i]
+				for j in xrange(0, 5):
+					totalAll[j] += All[j]
+
 	else:  # Months with 31 days
 		days = 31
-		for d in xrange(1, 32)
+		for d in xrange(1, 32):
 			Renew, All = processDay(year, month, d)
-			for i in xrange(0, 7):
-				totalRenew[i] += Renew[i]
-			for j in xrange(0, 5):
-				totalAll[j] += All[j]
+			if (Renew.all() != None and All.all() != None):
+				for i in xrange(0, 7):
+					totalRenew[i] += Renew[i]
+				for j in xrange(0, 5):
+					totalAll[j] += All[j]
 
 	for k in xrange(0, 7):
 		avgRenew[k] = totalRenew[k]/days
@@ -213,7 +252,7 @@ def processYear( year ):
 			for j in xrange(0, 5):
 				totalAll[j] += All[j]
 
-	else if year == 2010:  # Starts in April
+	elif year == 2010:  # Starts in April
 		months = 9
 		for m in xrange(4, 13):  # Finish April
 			Renew, All = processMonth(year, m)
@@ -239,82 +278,90 @@ def processYear( year ):
 
 	return avgRenew, avgAll	
 
-def main(argv):
-	if len(sys.argv) < 2: # No input arguments, aggregate all data since 4/20/2010
-		year = None
-		month = None
-		day = None
-	else if len(sys.argv) == 2: # There is one argument for year
-		year = int(sys.argv[1])	
-		month = None
-		day = None
-	else if len(sys.argv) == 3: # There are two arguments, year, month
-		year = int(sys.argv[1])
-		month = int(sys.argv[2])
-		day = None
-	else if len(sys.argv) == 4: # There are three arguments, year, month, day
-		year = int(sys.argv[1])	
-		month = int(sys.argv[2])
-		day = int(sys.argv[3])
-	else:
-		sys.exit("Error: cannot input more than three arguments")
 
-	totalRenew = np.empty(7)
-	totalAll = np.empty(5)
 
-	avgRenew = np.empty(7)
-	avgAll = np.empty(5)
 
-	i = datetime.datetime.now()
+if len(sys.argv) < 2: # No input arguments, aggregate all data since 4/20/2010
+	print "No input arguments, average all possible data"
+	year = None
+	month = None
+	day = None
+elif len(sys.argv) == 2: # There is one argument for year
+	year = int(sys.argv[1])	
+	month = None
+	day = None
+	print "One input argument, average all data for year " + str(year)
+elif len(sys.argv) == 3: # There are two arguments, year, month
+	year = int(sys.argv[1])
+	month = int(sys.argv[2])
+	day = None
+	print "Two input arguments, average all data for month " + str(month) + "/" + str(year)
+elif len(sys.argv) == 4: # There are three arguments, year, month, day
+	year = int(sys.argv[1])	
+	month = int(sys.argv[2])
+	day = int(sys.argv[3])
+	print "Three input arguments, average all data for date " + str(day) + "/" + str(month) + "/" + str(year)
 
-	currYear = i.year
-	currMonth = i.month
-	currDay = i.day
+else:
+	sys.exit("Error: cannot input more than three arguments")
 
-	if year == None:  # Aggregate all data
-		# Start from 04/20/2010
-		months = 12
-		for y in xrange(2010, currYear):
-			Renew, All = processYear(y)
-			for i in xrange(0, 7):
-				totalRenew[i] += Renew[i]
-			for j in xrange(0, 5):
-				totalAll[j] += All[j]
-	else if month == None:  # Aggregate data for the year
-		Renew, All = processYear(year)
+totalRenew = np.empty(7)
+totalAll = np.empty(5)
+
+avgRenew = np.empty(7)
+avgAll = np.empty(5)
+
+i = datetime.datetime.now()
+
+currYear = i.year
+currMonth = i.month
+currDay = i.day
+
+if year == None:  # Aggregate all data
+	print "Average all possible data"
+	# Start from 04/20/2010
+	months = 12
+	for y in xrange(2010, currYear):
+		Renew, All = processYear(y)
 		for i in xrange(0, 7):
 			totalRenew[i] += Renew[i]
 		for j in xrange(0, 5):
 			totalAll[j] += All[j]
-	else if day == None:  # Aggregate data for the month
-		Renew, All = processMonth(year, month)
+elif month == None:  # Aggregate data for the year
+	print "Average year " + str(year)
+	Renew, All = processYear(year)
+	for i in xrange(0, 7):
+		totalRenew[i] += Renew[i]
+	for j in xrange(0, 5):
+		totalAll[j] += All[j]
+elif day == None:  # Aggregate data for the month
+	print "Average month " + str(month) + "/" + str(year)
+	Renew, All = processMonth(year, month)
+	for i in xrange(0, 7):
+		totalRenew[i] += Renew[i]
+	for j in xrange(0, 5):
+		totalAll[j] += All[j]
+elif year == currYear and month == currMonth and day == currDay:  
+	sys.exit("Error: cannot calculate average for today")
+else:  # Aggregate data for the day
+	print "Average day " + str(day) + "/" + str(month) + "/" + str(year)
+	Renew, All = processDay(year, month, d)
+	if (Renew.all() != None and All.all() != None):
 		for i in xrange(0, 7):
 			totalRenew[i] += Renew[i]
 		for j in xrange(0, 5):
 			totalAll[j] += All[j]
-	else if year == currYear and month == currMonth and day == currDay:  
-		sys.exit("Error: cannot calculate average for today")
-	else:  # Aggregate data for the day
-		Renew, All = processDay(year, month, day)
-		for i in xrange(0, 7):
-			totalRenew[i] += Renew[i]
-		for j in xrange(0, 5):
-			totalAll[j] += All[j]
-	
-	print "Average Geothermal = " + Renew[0]
-	print "Average Biomass = " + Renew[1]
-	print "Average Biogas = " + Renew[2]
-	print "Average Small Hydro = " + Renew[3]
-	print "Average Wind Total = " + Renew[4]
-	print "Average Solar PV = " + Renew[5]
-	print "Average Solar Thermal = " + Renew[6]
-	print ;
-	print "Average Renewables = " + All[0]
-	print "Average Nuclear = " + All[1]
-	print "Average Thermal = " + All[2]
-	print "Average Imports = " + All[3]
-	print "Average Hydro = " + All[4]
-		
 
-
-
+print "Average Geothermal = " + str(Renew[0])
+print "Average Biomass = " + str(Renew[1])
+print "Average Biogas = " + str(Renew[2])
+print "Average Small Hydro = " + str(Renew[3])
+print "Average Wind Total = " + str(Renew[4])
+print "Average Solar PV = " + str(Renew[5])
+print "Average Solar Thermal = " + str(Renew[6])
+print ;
+print "Average Renewables = " + str(All[0])
+print "Average Nuclear = " + str(All[1])
+print "Average Thermal = " + str(All[2])
+print "Average Imports = " + str(All[3])
+print "Average Hydro = " + str(All[4])
