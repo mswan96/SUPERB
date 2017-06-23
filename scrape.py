@@ -6,6 +6,22 @@ import numpy as np
 # Process one day and return averages for each type of generation
 def processDay( year, month, day ):
 	# 20170619
+	i = datetime.datetime.now()
+
+	currYear = i.year
+	currMonth = i.month
+	currDay = i.day
+
+	if currDay == 1:  # Date wraps around to last day of last month
+		if currMonth == 3:  # Month before was February with 28 days
+			yesterday = 28
+		else if currMonth == (5 or 7 or 10 or 12):  # Month before had 30 days
+			yesterday = 30
+		else:  # Month before had 31 days
+			yesterday = 31
+	else:
+		yesterday = currDay - 1  
+
 	if month < 10:
 		monthstr = "0" + str(month)
 	else:
@@ -118,7 +134,22 @@ def processMonth( year, month ):
 	avgRenew = np.empty(7)
 	avgAll = np.empty(5)
 
-	if month == 4: # Finish April
+	i = datetime.datetime.now()
+
+	currYear = i.year
+	currMonth = i.month
+	currDay = i.day
+
+	if month == currMonth:  # Only go up to current day
+		days = currDay
+		for d in xrange(1, currDay)
+			Renew, All = processDay(year, month, d)
+			for i in xrange(0, 7):
+				totalRenew[i] += Renew[i]
+			for j in xrange(0, 5):
+				totalAll[j] += All[j]
+
+	else if month == 4: # Finish April
 		days = 10
 		for d in xrange(20, 31):
 			Renew, All = processDay(year, month, d)
@@ -144,7 +175,7 @@ def processMonth( year, month ):
 				totalRenew[i] += Renew[i]
 			for j in xrange(0, 5):
 				totalAll[j] += All[j]	
-	else if :  # Months with 31 days
+	else:  # Months with 31 days
 		days = 31
 		for d in xrange(1, 32)
 			Renew, All = processDay(year, month, d)
@@ -168,27 +199,43 @@ def processYear( year ):
 	avgRenew = np.empty(7)
 	avgAll = np.empty(5)
 
-	if year == 2010: 
+	i = datetime.datetime.now()
+
+	currYear = i.year
+	currMonth = i.month
+
+	if year == currYear:  # Only go up to current month
+		months = currMonth
+		for m in xrange(1, currMonth + 1):
+			Renew, All = processMonth(year, m)
+			for i in xrange(0, 7):
+				totalRenew[i] += Renew[i]
+			for j in xrange(0, 5):
+				totalAll[j] += All[j]
+
+	else if year == 2010:  # Starts in April
 		months = 9
-		for m in xrange(4, 13): # Finish April
+		for m in xrange(4, 13):  # Finish April
 			Renew, All = processMonth(year, m)
 			for i in xrange(0, 7):
 				totalRenew[i] += Renew[i]
 			for j in xrange(0, 5):
 				totalAll[j] += All[j]
-	else:
+	
+	else:  # Average whole year
 		months = 12
-		for m in xrange(1, 13): # Finish April
+		for m in xrange(1, 13):
 			Renew, All = processMonth(year, m)
 			for i in xrange(0, 7):
 				totalRenew[i] += Renew[i]
 			for j in xrange(0, 5):
 				totalAll[j] += All[j]
-	# Calculate averages for month
+	
+	# Calculate averages for the year
 	for k in xrange(0, 7):
-		avgRenew[k] = totalRenew[k]/days
+		avgRenew[k] = totalRenew[k]/months
 	for l in xrange(0, 5):
-		avgAll[l] = totalAll[l]/days
+		avgAll[l] = totalAll[l]/months
 
 	return avgRenew, avgAll	
 
@@ -212,9 +259,11 @@ def main(argv):
 	else:
 		sys.exit("Error: cannot input more than three arguments")
 
-	avgDayRenew = np.empty(7)
-	avgDayAll = np.empty(5)
-	dayCount = 0
+	totalRenew = np.empty(7)
+	totalAll = np.empty(5)
+
+	avgRenew = np.empty(7)
+	avgAll = np.empty(5)
 
 	i = datetime.datetime.now()
 
@@ -222,66 +271,50 @@ def main(argv):
 	currMonth = i.month
 	currDay = i.day
 
-	if currDay == 1:
-		if currMonth == 3:
-			yesterday = 28
-		else if currMonth == 5 or currMonth == 7 or currMonth == 10 or currMonth == 12:
-			yesterday = 30
-		else:
-			yesterday = 31
-	else:
-		yesterday = currDay - 1  
-
 	if year == None:  # Aggregate all data
 		# Start from 04/20/2010
 		months = 12
-		for y in xrange(2010, 13):
-			Renew, All = processYear(year)
+		for y in xrange(2010, currYear):
+			Renew, All = processYear(y)
 			for i in xrange(0, 7):
 				totalRenew[i] += Renew[i]
 			for j in xrange(0, 5):
 				totalAll[j] += All[j]
-	else:
+	else if month == None:  # Aggregate data for the year
 		Renew, All = processYear(year)
-			for i in xrange(0, 7):
-				totalRenew[i] += Renew[i]
-			for j in xrange(0, 5):
-				totalAll[j] += All[j]
-
-		# for aprilDays in xrange(20, 31): # Finish April
-		# 	Renew1, All1 = processDay(2010, 4, aprilDays)
-		# 	dayCount += 1
-		# 	for j in xrange(0, 7):
-		# 		avgDayRenew[j] += Renew1[j]
-		# 		avgDayAll[j] += All1[j]
-
-		# for firstM in xrange(5, 13): # Finish 2010
-		# 	if firstM == (6 or 9 or 11): # Months with 30 days
-		# 		for firstD in xrange(1, 31)
-		# 			Renew2, All2 = processDay(2010, firstM, firstD)
-		# 			dayCount += 1
-		# 			for j in xrange(0, 7):
-		# 				avgDayRenew[j] += Renew2[j]
-		# 				avgDayAll[j] += All2[j]
-		# 	else:  # Months with 31 days (february not included in 2010)
-		# 		for firstD in xrange(1, 32)
-		# 			Renew2, All2 = processDay(2010, firstM, firstD)
-		# 			dayCount += 1
-		# 			for j in xrange(0, 7):
-		# 				avgDayRenew[j] += Renew2[j]
-		# 				avgDayAll[j] += All2[j]
-		# # Now the rest up until yesterday
-		# for y in xrange(2011, currYear):
-		# 	for m in xrange(1, 13)
-		# 		if m == 2:  # february has 28 days
-		# 			for firstD in xrange(1, 32)
-		# 			Renew2, All2 = processDay(2010, firstM, firstD)
-		# 			dayCount += 1
-		# 			for j in xrange(0, 7):
-		# 				avgDayRenew[j] += Renew2[j]
-		# 				avgDayAll[j] += All2[j]
-		# 	processDay(year, month, day)
-	 
+		for i in xrange(0, 7):
+			totalRenew[i] += Renew[i]
+		for j in xrange(0, 5):
+			totalAll[j] += All[j]
+	else if day == None:  # Aggregate data for the month
+		Renew, All = processMonth(year, month)
+		for i in xrange(0, 7):
+			totalRenew[i] += Renew[i]
+		for j in xrange(0, 5):
+			totalAll[j] += All[j]
+	else if year == currYear and month == currMonth and day == currDay:  
+		sys.exit("Error: cannot calculate average for today")
+	else:  # Aggregate data for the day
+		Renew, All = processDay(year, month, day)
+		for i in xrange(0, 7):
+			totalRenew[i] += Renew[i]
+		for j in xrange(0, 5):
+			totalAll[j] += All[j]
+	
+	print "Average Geothermal = " + Renew[0]
+	print "Average Biomass = " + Renew[1]
+	print "Average Biogas = " + Renew[2]
+	print "Average Small Hydro = " + Renew[3]
+	print "Average Wind Total = " + Renew[4]
+	print "Average Solar PV = " + Renew[5]
+	print "Average Solar Thermal = " + Renew[6]
+	print ;
+	print "Average Renewables = " + All[0]
+	print "Average Nuclear = " + All[1]
+	print "Average Thermal = " + All[2]
+	print "Average Imports = " + All[3]
+	print "Average Hydro = " + All[4]
+		
 
 
 
