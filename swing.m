@@ -12,15 +12,15 @@ clear all; close all;
 %%%% Parameters %%%%
 
 f_0 = 60;
-H = 6;
+H = 8;
 H_1 = 6;
 H_2 = 6;
-S_B = 115000000;
+S_B = 1.8;
 k = 1.5;
-D = (1/k);
+D = 0.02;
 %P_m = ;
 %P_load = ;
-P_delta = 3000000;
+P_delta = 20;
 P_delta1 = 1000000;
 P_delta2 = 0;
 P_loss = 0;
@@ -35,22 +35,29 @@ B_2 = 0.0000000001*100000000000;
 %B_3 = f_0/(2*H_3*S_B);
 
 A = -1*(f_0/(2*H*S_B*D));
-B = (f_0/(2*H*S_B))*(P_delta - P_loss);
+B = (f_0/(2*H*S_B));
 
-A1 = P_delta1/M_1
-B1 = k/M_1
-C1 = (V_1*V_2*B_2)/M_1
-%D1 = (V_1*V_3*B_3)/M_1
+C = f_0/(2*H*S_B);
 
-A2 = P_delta2/M_2
-B2 = k/M_2
-C2 = (V_2*V_1*B_1)/M_2
+%f = -C*(1/D)*X(1) + C*P(t);
+
+A1 = P_delta1/M_1;
+B1 = k/M_1;
+C1 = (V_1*V_2*B_2)/M_1;
+%D1 = (V_1*V_3*B_3)/M_1;
+
+A2 = P_delta2/M_2;
+B2 = k/M_2;
+C2 = (V_2*V_1*B_1)/M_2;
 %D2 = (V_2*V_3*B_3)/M_2;
 
 %%%% Functions %%%%
 
 % #1: Aggregated Swing Equation
-% f = @(t,X) [X(2); A*X(1)+B];
+
+%f = @(t,X) [X(2); A*X(1)+B*P];
+pt = linspace(0, 10, 25); % Generate t for p
+p = 1.8*(heaviside(pt-3) - heaviside(pt-4)); % Generate p(t) as a 1 second pulse
 
 % #2: function from http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=1086115
 % f = @(t,X) [X(2); 0.234 - 0.7143*X(2) - 0.0633*sin(X(1) + 0.0405) - 0.582*sin(X(1) + 0.4103)];
@@ -72,7 +79,7 @@ C2 = (V_2*V_1*B_1)/M_2
 % values.
 
 % #5: Fully parameterized two-area model using X(1) = d1-d2 and X(2) = w1-w2 or X(1)prime
- f = @(t,X) [X(2); A1 - A2 - (B1 - B2)*X(1) - C1*sin(X(1)) + C2*sin(-X(1))];
+% f = @(t,X) [X(2); A1 - A2 - (B1 - B2)*X(1) - C1*sin(X(1)) + C2*sin(-X(1))];
 % NOTE: only works with assumption that k1 = k2
 
 % To generate the phase portrait, we need to compute the derivatives $y_1'$ and $y_2'$ 
@@ -81,45 +88,53 @@ C2 = (V_2*V_1*B_1)/M_2
 % direction from each point. We will examine the solutions over the range -2 < y1 < 8, and 
 % -2 < y2 < 2 for y2, and create a grid of 20x20 points.
 
-y1 = linspace(-100,100,50);
-y2 = linspace(-100,100,50);
-
-[x,y] = meshgrid(y1,y2);
-size(x);
-size(y);
-
-% computing the vector field
-
-u = zeros(size(x));
-v = zeros(size(x));
-
-% we can use a single loop over each element to compute the derivatives at
-% each point (y1, y2)
-t=0; % we want the derivatives at each point at t=0, i.e. the starting time
-
-for i = 1:numel(x)
-    Yprime = f(t,[x(i);y(i);x(i);y(i)]);
-    u(i) = Yprime(1);
-    v(i) = Yprime(2);
-end
-
-quiver(x,y,u,v,'r'); figure(gcf)
-xlabel('x_1')
-ylabel('x_2')
-axis tight equal;
+% y1 = linspace(-100,100,50);
+% y2 = linspace(-100,100,50);
+% 
+% [x,y] = meshgrid(y1,y2);
+% size(x);
+% size(y);
+% 
+% % computing the vector field
+% 
+% u = zeros(size(x));
+% v = zeros(size(x));
+% 
+% % we can use a single loop over each element to compute the derivatives at
+% % each point (y1, y2)
+% t=0; % we want the derivatives at each point at t=0, i.e. the starting time
+% 
+% for i = 1:numel(x)
+%     Yprime = f(t,[x(i);y(i);x(i);y(i)]);
+%     u(i) = Yprime(1);
+%     v(i) = Yprime(2);
+% end
+% 
+% quiver(x,y,u,v,'r'); figure(gcf)
+% xlabel('x_1')
+% ylabel('x_2')
+% axis tight equal;
 
 %% PLOT SOLUTIONS
 
 hold on
-for y10 = -100:10:100
-for y20 = -100:10:100
+%for y10 = -100:10:100
+%for y20 = -100:10:100
+    %syms x
+    %fplot((heaviside(x-3) - heaviside(x-5)), [0, 10]);
+    TSPAN = [0 10];
+    IC = 0; % f(t=0) = 60;
+    [T Y] = ode45(@(t,f) mySwing(t, f, pt, p, A, B), TSPAN, IC); % Solve ODE
     
+    plot(T, Y);
     % For functions #1, 2, 3, 5
-    [ts,ys] = ode45(f,[0,500],[y10;y20]);
-    plot(ys(:,1),ys(:,2))
+    %[ts,ys] = ode45(f,[0,500],[y10;y20]);
+    %[ts,ys] = ode45(f, [0,500], [0;0]);
+    %plot(ys(:,1),ys(:,2))
+    %plot(ts,ys(:,1))
     grid on
-    ylim([-100, 100])
-    xlim([-100, 100])
+    %ylim([-10, 10000])
+    %xlim([-10, 100])
     
     % For function #4
     %[ts1,ys1] = ode45(f1,[0,500],[y10;y20;0;0]); 
@@ -133,6 +148,6 @@ for y20 = -100:10:100
     %daspect([1 0.5 1]);
     %plot(ys(1,1),ys(1,2),'bo') % starting point
     %plot(ys(end,1),ys(end,2),'ks') % ending point
-end
-end
+%end
+%end
 hold off
