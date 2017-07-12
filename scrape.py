@@ -102,7 +102,7 @@ def processDay (year, month, day):
 				columnCount = 0;
 				isEmpty = 0
 				if lineCount > 1 and lineCount < 26:
-					for x in range(0,rColumnsLimit):
+					for x in range(2,rColumnsLimit):
 						if (line[x] != '' and line[x] != None):
 							#print "-------"
 							#print rowCount, columnCount, line[x], int(line[x])
@@ -123,12 +123,12 @@ def processDay (year, month, day):
 					if isEmpty == 1:
 						rowCount += 1
 				if lineCount > 29 and lineCount < (30+24):
-					for x in range(0,14):
+					for x in range(2,14):
 						if line[x] != '':
 							#print "-------"
 							#print rowCount - 24, columnCount, line[x]
 							if is_number(line[x]):
-								All[rowCount-24][columnCount] = int(line[x])
+								All[rowCount-25][columnCount] = int(line[x])
 								columnCount += 1
 								isEmpty = 1
 							else: 
@@ -360,22 +360,24 @@ elif len(sys.argv) == 4: # There are three arguments, year, month, day
 	year = int(sys.argv[1])	
 	month = int(sys.argv[2])
 	day = int(sys.argv[3])
-	print "Three input arguments, average all data for date " + str(day) + "/" + str(month) + "/" + str(year)
+	print "Three input arguments, average all data for date " + str(month) + "/" + str(day) + "/" + str(year)
 
 else:
 	sys.exit("Error: cannot input more than three arguments")
 
-totalRenew = np.empty(7)
-totalAll = np.empty(5)
+totalRenew = np.zeros((24,7))
+totalAll = np.zeros((24,5))
 
-avgRenew = np.empty(7)
-avgAll = np.empty(5)
+avgRenew = np.zeros((24,7))
+avgAll = np.zeros((24,5))
 
-i = datetime.datetime.now()
 
-currYear = i.year
-currMonth = i.month
-currDay = i.day
+now = datetime.datetime.now()
+
+currYear = now.year
+currMonth = now.month
+currDay = now.day
+
 
 if year == None:  # Aggregate all data
 	print "Average all possible data"
@@ -406,7 +408,7 @@ elif day == None:  # Aggregate data for the month
 elif year == currYear and month == currMonth and day == currDay:  
 	sys.exit("Error: cannot calculate average for today")
 else:  # Aggregate data for the day
-	print "Average day " + str(day) + "/" + str(month) + "/" + str(year)
+	print "Average day " + str(month) + "/" + str(day) + "/" + str(year)
 	Renew, All = processDay(year, month, day)
 	if (Renew.all() != None and All.all() != None):
 		for i in range(0, 24):
@@ -414,21 +416,47 @@ else:  # Aggregate data for the day
 				totalRenew[i][j] += Renew[i][j]
 			for k in range(0, 5):
 				totalAll[i][k] += All[i][k]
+rAverage = np.mean(totalRenew, axis=0)
+aAverage = np.mean(totalAll, axis=0)
 
-print "Average Geothermal = " + str(Renew[0])
-print "Average Biomass = " + str(Renew[1])
-print "Average Biogas = " + str(Renew[2])
-print "Average Small Hydro = " + str(Renew[3])
-print "Average Wind Total = " + str(Renew[4])
-print "Average Solar PV = " + str(Renew[5])
-print "Average Solar Thermal = " + str(Renew[6])
+print "Average Geothermal = " + str(rAverage[0])
+print "Average Biomass = " + str(rAverage[1])
+print "Average Biogas = " + str(rAverage[2])
+print "Average Small Hydro = " + str(rAverage[3])
+print "Average Wind Total = " + str(rAverage[4])
+print "Average Solar PV = " + str(rAverage[5])
+print "Average Solar Thermal = " + str(rAverage[6])
 print ;
-print "Average Renewables = " + str(All[0])
-print "Average Nuclear = " + str(All[1])
-print "Average Thermal = " + str(All[2])
-print "Average Imports = " + str(All[3])
-print "Average Hydro = " + str(All[4])
+print "Average Renewables = " + str(aAverage[0])
+print "Average Nuclear = " + str(aAverage[1])
+print "Average Thermal = " + str(aAverage[2])
+print "Average Imports = " + str(aAverage[3])
+print "Average Hydro = " + str(aAverage[4])
+print
 
-disp(Renew);
+# print "Average Geothermal = " + str(Renew[:,0])
+# print "Average Biomass = " + str(Renew[:,1])
+# print "Average Biogas = " + str(Renew[:,2])
+# print "Average Small Hydro = " + str(Renew[:,3])
+# print "Average Wind Total = " + str(Renew[:,4])
+# print "Average Solar PV = " + str(Renew[:,5])
+# print "Average Solar Thermal = " + str(Renew[:,6])
+# print ;
+# print "Average Renewables = " + str(All[:,0])
+# print "Average Nuclear = " + str(All[:,1])
+# print "Average Thermal = " + str(All[:,2])
+# print "Average Imports = " + str(All[:,3])
+# print "Average Hydro = " + str(All[:,4])
 
+for row in Renew:
+    for val in row:
+        print '{:6}'.format(val),
+    print
+
+print
+
+for row in All:
+    for val in row:
+        print '{:4}'.format(val),
+    print
 
