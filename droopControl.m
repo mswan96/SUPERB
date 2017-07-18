@@ -1,4 +1,4 @@
-function dfdt = mySwing(t, f, A, B)
+function dfdt = droopControl(t, f, A, B, q, R)
 
 if (t >= 10) && (t <= 20)
     p = t - 10;
@@ -13,6 +13,6 @@ else
 end
 
 % Control Variable:
-% u = 0
+% u = q + (1/R)*f
 
-dfdt = (A*f + B*p); % Evaluate ODE at times t
+dfdt = (A*f + B*p - q - (1/R)*f); % Evaluate ODE at times t
