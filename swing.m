@@ -30,16 +30,16 @@ Hvec = [0.01 0.1 1 6 8 10];
 %%%% Constants %%%%
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
-D = 0.1;        % damping coefficient
+D = 0.02;        % damping coefficient
 
-q = 0.5;        % power generation set point
+q = 0;        % power generation set point
 R = 15;         % droop coefficient
 M = 0.15;       % virtual inertia
 % Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
 
 
 %%%% Functions %%%%
-TSPAN = [0 100];
+TSPAN = [0 10];
 IC = 0;         % Initial Condition: delta_f(t=0) = 0;
 
 %% Plot Swing eq no control
@@ -135,7 +135,7 @@ title('Frequency Response with No Control');
 xlabel('time (s)'); ylabel('?f(t)');
 %legend(num2str(Hvec(0)), num2str(Hvec(1)), num2str(Hvec(2)), num2str(Hvec(3)), num2str(Hvec(4)), num2str(Hvec(5)));
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
-
+hold off
 %% Constant Power
 for ii=1:length(Hvec)
     H = Hvec(ii)    % inertia constant
@@ -184,7 +184,7 @@ end
 title('Frequency Response with Constant Power');
 xlabel('time (s)'); ylabel('?f(t)');
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
-
+hold off
 %% Droop Control
 for ii=1:length(Hvec)
     H = Hvec(ii)    % inertia constant
@@ -232,7 +232,7 @@ end
 title('Frequency Response with Droop Control');
 xlabel('time (s)'); ylabel('?f(t)');
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
-
+hold off
 %% Virtual Inertia
 Hvec = [0.01 0.1 1 6 8 10];
 
@@ -282,3 +282,4 @@ end
 title('Frequency Response with Virtual Inertia');
 xlabel('time (s)'); ylabel('?f(t)');
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
+hold off
