@@ -7,12 +7,12 @@
 %
 % http://matlab.cheme.cmu.edu/2011/08/09/phase-portraits-of-a-system-of-odes/
 
-clear all; close all;
+clear all; close all; clc;
 
 %% Plot p.u. disturbance function
 
 syms x
-p = piecewise(10<x<20, 0.1*(x-10), 30<x<40, -0.1*(x-30), 50<x<60, 1, 70<x<80, -1, 0);
+p = piecewise(0.05<x<0.1, 20*(x-0.05), 0.15<x<0.2, -20*(x-0.15), 0.25<x<0.3, 1, 0.35<x<0.4, -1, 0);
 
 figure(1)
 subplot(2,1,1)
@@ -20,8 +20,8 @@ subplot(2,1,1)
 fplot(p);
 title('Disturbance p(t)');
 xlabel('time (s)'); ylabel('(?P_m - ?P_load)');
-xlim([0, 100])
-ylim([-1, 1])
+xlim([0, 0.5])
+%ylim([-1, 1])
 grid on
 
 %% Inputs
@@ -39,7 +39,7 @@ M = 0.15;       % virtual inertia
 
 
 %%%% Functions %%%%
-TSPAN = [0 10];
+TSPAN = [0 0.5];
 IC = 0;         % Initial Condition: delta_f(t=0) = 0;
 
 %% Plot Swing eq no control
@@ -86,6 +86,7 @@ title('Frequency Response with No Control');
 xlabel('time (s)'); ylabel('?f(t)');
 %legend(num2str(Hvec(0)), num2str(Hvec(1)), num2str(Hvec(2)), num2str(Hvec(3)), num2str(Hvec(4)), num2str(Hvec(5)));
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
+hold off
 %% No Control
 for ii=1:length(Hvec)
     H = Hvec(ii)    % inertia constant
