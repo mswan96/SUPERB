@@ -24,7 +24,7 @@ xlim([0, 100])
 ylim([-1, 1])
 grid on
 
-%% Plot Swing eq no control
+%% Inputs
 Hvec = [0.01 0.1 1 6 8 10];
 
 %%%% Constants %%%%
@@ -42,6 +42,7 @@ M = 0.15;       % virtual inertia
 TSPAN = [0 100];
 IC = 0;         % Initial Condition: delta_f(t=0) = 0;
 
+%% Plot Swing eq no control
 for ii=1:length(Hvec)
     H = Hvec(ii)    % inertia constant
     
@@ -233,6 +234,8 @@ xlabel('time (s)'); ylabel('?f(t)');
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
 
 %% Virtual Inertia
+Hvec = [0.01 0.1 1 6 8 10];
+
 for ii=1:length(Hvec)
     H = Hvec(ii)    % inertia constant
     
