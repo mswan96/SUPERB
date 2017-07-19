@@ -1,9 +1,9 @@
 function dfdt = mySwing(t, f, A, B)
 
 if (t >= 10) && (t <= 20)
-    p = t - 10;
+    p = 0.1*(t - 10);
 elseif (t > 30) && (t <= 40)
-    p = -t + 30;
+    p = -0.1*(t - 30);
 elseif (t > 50) && (t <= 60)
     p = 1;
 elseif (t > 70) && (t <= 80)

@@ -1,9 +1,9 @@
 function dfdt = constantPower(t, f, A, B, q)
 
-if (t >= 10) && (t <= 20)
-    p = t - 10;
+if (t >= 1) && (t <= 2)
+    p = -0.5;
 elseif (t > 30) && (t <= 40)
-    p = -t + 30;
+    p = -0.1*(t - 30);
 elseif (t > 50) && (t <= 60)
     p = 1;
 elseif (t > 70) && (t <= 80)
