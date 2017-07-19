@@ -196,36 +196,36 @@ for ii=1:length(Hvec)
 
     [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
     
-    figure(2)
+    figure(1)
     hold on
 
     if ii == 1
-        subplot(2,2,3)
+        subplot(2,1,2)
         hold on
         plot(T3, F3, 'r:');
 
     elseif ii == 2
-        subplot(2,2,3)
+        subplot(2,1,2)
         hold on
         plot(T3, F3, 'g--');
 
     elseif ii == 3
-        subplot(2,2,3)
+        subplot(2,1,2)
         hold on
         plot(T3, F3, 'c-.');
 
     elseif ii == 4
-        subplot(2,2,3)
+        subplot(2,1,2)
         hold on
         plot(T3, F3, 'b-');
 
     elseif ii == 5 
-        subplot(2,2,3)
+        subplot(2,1,2)
         hold on
         plot(T3, F3, 'm:');
 
     else
-        subplot(2,2,3)
+        subplot(2,1,2)
         hold on
         plot(T3, F3, 'k--');
     end
