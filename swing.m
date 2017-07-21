@@ -16,10 +16,10 @@ p = piecewise(0.05<x<0.1, 20*(x-0.05), 0.15<x<0.2, -20*(x-0.15), 0.25<x<0.3, 1, 
 
 figure(1)
 subplot(2,1,1)
-
+hold on
 fplot(p);
 title('Disturbance p(t)');
-xlabel('time (s)'); ylabel('(?P_m - ?P_load)');
+xlabel('time (s)'); ylabel('?P_m - ?P_load');
 xlim([0, 0.5])
 %ylim([-1, 1])
 grid on
@@ -34,7 +34,7 @@ D = 0.02;        % damping coefficient
 
 q = 0;        % power generation set point
 R = 15;         % droop coefficient
-M = 15;       % virtual inertia
+M = 0.15;       % virtual inertia
 % Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
 
 
@@ -99,35 +99,24 @@ for ii=1:length(Hvec)
     [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
 
     figure(2)
-    
+    hold on
+
     if ii == 1
-        subplot(2,2,1)
-        hold on
         plot(T1, F1, 'r:');
 
     elseif ii == 2
-        subplot(2,2,1)
-        hold on
         plot(T1, F1, 'g--');
 
     elseif ii == 3
-        subplot(2,2,1)
-        hold on
         plot(T1, F1, 'c-.');
 
     elseif ii == 4
-        subplot(2,2,1)
-        hold on
         plot(T1, F1, 'b-');
 
     elseif ii == 5 
-        subplot(2,2,1)
-        hold on
         plot(T1, F1, 'm:');
 
     else
-        subplot(2,2,1)
-        hold on
         plot(T1, F1, 'k--');
 
     end
@@ -147,37 +136,25 @@ for ii=1:length(Hvec)
 
     [T2, F2] = ode45(@(t,f) constantPower(t, f, A, B, q), TSPAN, IC);
     
-    figure(2)
+    figure(3)
     hold on
 
     if ii == 1
-        subplot(2,2,2)
-        hold on
         plot(T2, F2, 'r:');
 
     elseif ii == 2
-        subplot(2,2,2)
-        hold on
         plot(T2, F2, 'g--');
 
     elseif ii == 3
-        subplot(2,2,2)
-        hold on
         plot(T2, F2, 'c-.');
 
     elseif ii == 4
-        subplot(2,2,2)
-        hold on
         plot(T2, F2, 'b-');
 
     elseif ii == 5 
-        subplot(2,2,2)
-        hold on
         plot(T2, F2, 'm:');
 
     else
-        subplot(2,2,2)
-        hold on
         plot(T2, F2, 'k--');
     end
     
@@ -196,37 +173,25 @@ for ii=1:length(Hvec)
 
     [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
     
-    figure(2)
+    figure(4)
     hold on
 
     if ii == 1
-        subplot(2,2,3)
-        hold on
         plot(T3, F3, 'r:');
 
     elseif ii == 2
-        subplot(2,2,3)
-        hold on
         plot(T3, F3, 'g--');
 
     elseif ii == 3
-        subplot(2,2,3)
-        hold on
         plot(T3, F3, 'c-.');
 
     elseif ii == 4
-        subplot(2,2,3)
-        hold on
         plot(T3, F3, 'b-');
 
     elseif ii == 5 
-        subplot(2,2,3)
-        hold on
         plot(T3, F3, 'm:');
 
     else
-        subplot(2,2,3)
-        hold on
         plot(T3, F3, 'k--');
     end
 end
@@ -246,37 +211,25 @@ for ii=1:length(Hvec)
 
     [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
     
-    figure(2)
+    figure(5)
     hold on
 
     if ii == 1
-        subplot(2,2,4)
-        hold on
         plot(T4, F4, 'r:');
 
     elseif ii == 2
-        subplot(2,2,4)
-        hold on
         plot(T4, F4, 'g--');
 
     elseif ii == 3
-        subplot(2,2,4)
-        hold on
         plot(T4, F4, 'c-.');
 
     elseif ii == 4
-        subplot(2,2,4)
-        hold on
         plot(T4, F4, 'b-');
 
     elseif ii == 5 
-        subplot(2,2,4)
-        hold on
         plot(T4, F4, 'm:');
 
     else
-        subplot(2,2,4)
-        hold on
         plot(T4, F4, 'k--');
     end
 end
@@ -284,3 +237,23 @@ title('Frequency Response with Virtual Inertia');
 xlabel('time (s)'); ylabel('?f(t)');
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
 hold off
+
+%% Comparing controllers with H=10
+figure(6)
+hold on
+H = 10;
+
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
+
+[T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
+[T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+
+plot(T1,F1);
+plot(T3,F3);
+plot(T4,F4);
+%ylim([-1, 1]);
+legend('No Control', 'Droop Control', 'Virtual Inertia');
+
+
