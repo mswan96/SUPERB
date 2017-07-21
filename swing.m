@@ -34,7 +34,7 @@ D = 0.02;        % damping coefficient
 
 q = 0;        % power generation set point
 R = 15;         % droop coefficient
-M = 0.15;       % virtual inertia
+M = 15;       % virtual inertia
 % Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
 
 
