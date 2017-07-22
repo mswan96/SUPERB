@@ -256,4 +256,94 @@ plot(T4,F4);
 %ylim([-1, 1]);
 legend('No Control', 'Droop Control', 'Virtual Inertia');
 
+%% Testing Droop Control Parameters
+
+H = 6;
+R = 1.5;
+
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
+
+[T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
+
+figure
+hold on
+plot(T3,F3);
+
+R = 15;
+[T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
+plot(T3,F3);
+
+R = 150;
+[T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
+plot(T3,F3);
+
+legend('R=1.5', 'R=15', 'R=150');
+
+
+%% Testing Virtual Inertia Parameters
+
+H = 6;
+M = 0.15;
+
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
+
+figure
+hold on
+
+R = 0.15;
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+plot(T4,F4);
+
+R = 1.5;
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+plot(T4,F4);
+
+R = 15;
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+plot(T4,F4);
+
+R = 150;
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+plot(T4,F4);
+
+R = 1500;
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+plot(T4,F4);
+
+title('M = 0.15, R varying Virtual Inertia');
+legend('R=0.15','R=1.5', 'R=15', 'R=150', 'R=1500');
+
+hold off
+
+figure
+hold on
+
+R = 15;
+
+M = 0.0015;
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+plot(T4,F4);
+
+M = 0.015;
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+plot(T4,F4);
+
+M = 0.15;
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+plot(T4,F4);
+
+M = 1.5;
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+plot(T4,F4);
+
+M = 15;
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+plot(T4,F4);
+
+hold off
+
+title('R = 15, M varying Virtual Inertia');
+legend('M=0.0015', 'M=0.015', 'M=0.15','M=1.5', 'M=15');
 
