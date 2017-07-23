@@ -30,9 +30,9 @@ Hvec = [0.01 0.1 1 6 8 10];
 %%%% Constants %%%%
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
-D = 0.02;        % damping coefficient
+D = 0.02;       % damping coefficient
 
-q = 0;        % power generation set point
+q = 0;          % power generation set point
 R = 15;         % droop coefficient
 M = 0.15;       % virtual inertia
 % Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
@@ -284,7 +284,56 @@ legend('R=1.5', 'R=15', 'R=150');
 %% Testing Virtual Inertia Parameters
 
 H = 6;
-M = 0.15;
+
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
+
+
+for R = [0.15 1.5 15 150 1500]
+    
+    figure
+    hold on
+    [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
+    plot(T1,F1,'k');
+    for M = [0.0015 0.015 0.15 1.5 15]
+
+        [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+        plot(T4,F4);
+        ylim([-0.025 0.005]);
+        xlim([0 0.2]);
+    end
+    legend('No Control', 'M=0.0015', 'M=0.015', 'M=0.15', 'M=1.5', 'M=15');
+    title(num2str(R));
+end
+
+%% 
+
+H = 6;
+
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
+
+
+for M = [0.0015 0.015 0.15 1.5 15]
+    
+    figure
+    hold on
+    [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
+    plot(T1,F1,'k');
+    for R = [0.15 1.5 15 150 1500]
+
+        [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+        plot(T4,F4);
+        ylim([-0.025 0.005]);
+        xlim([0 0.2]);
+    end
+    legend('No Control', 'R=0.15', 'R=1.5', 'R=15', 'R=150', 'R=1500');
+    title(num2str(M));
+end
+
+%%
+
+H = 0;
 
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
@@ -292,58 +341,195 @@ B = (f_0/(2*H*S_B));
 figure
 hold on
 
-R = 0.15;
-[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-plot(T4,F4);
+[T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
+plot(T1,F1,'k');
 
-R = 1.5;
-[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-plot(T4,F4);
+for R = [0.15 15 1500]
 
-R = 15;
-[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-plot(T4,F4);
+    for M = [0.0015 0.15 15]
 
-R = 150;
-[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-plot(T4,F4);
+        [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+        plot(T4,F4);
+        
+    end
+    
+end
 
-R = 1500;
-[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-plot(T4,F4);
+str0 = strcat('R=',num2str(0.15),' M=', num2str(0.0015));
+str1 = strcat('R=',num2str(0.15),' M=', num2str(0.15));
+str2 = strcat('R=',num2str(0.15),' M=', num2str(15));
+str3 = strcat('R=',num2str(15),' M=', num2str(0.0015));
+str4 = strcat('R=',num2str(15),' M=', num2str(0.15));
+str5 = strcat('R=',num2str(15),' M=', num2str(15));
+str6 = strcat('R=',num2str(1500),' M=', num2str(0.0015));
+str7 = strcat('R=',num2str(1500),' M=', num2str(0.15));
+str8 = strcat('R=',num2str(1500),' M=', num2str(15));
 
-title('M = 0.15, R varying Virtual Inertia');
-legend('R=0.15','R=1.5', 'R=15', 'R=150', 'R=1500');
+legend('No Control', str0, str1, str2, str3, str4, str5, str6, str7, str8);
+title('Virtual Inertia');
+ylim([-0.065 0.005]);
+xlim([0 0.4]);
 
-hold off
+%% Droop Control
+
+H = 0;
+
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
 
 figure
 hold on
 
-R = 15;
+[T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
+plot(T1,F1,'k');
 
-M = 0.0015;
+for R = [0.15 15 1500]
+
+    for M = [0.0015 0.15 15]
+
+        [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R, M), TSPAN, IC);
+        plot(T3,F3);
+        
+    end
+    
+end
+
+str0 = strcat('R=',num2str(0.15),' M=', num2str(0.0015));
+str1 = strcat('R=',num2str(0.15),' M=', num2str(0.15));
+str2 = strcat('R=',num2str(0.15),' M=', num2str(15));
+str3 = strcat('R=',num2str(15),' M=', num2str(0.0015));
+str4 = strcat('R=',num2str(15),' M=', num2str(0.15));
+str5 = strcat('R=',num2str(15),' M=', num2str(15));
+str6 = strcat('R=',num2str(1500),' M=', num2str(0.0015));
+str7 = strcat('R=',num2str(1500),' M=', num2str(0.15));
+str8 = strcat('R=',num2str(1500),' M=', num2str(15));
+
+legend('No Control', str0, str1, str2, str3, str4, str5, str6, str7, str8);
+title('Virtual Inertia');
+ylim([-0.065 0.005]);
+xlim([0 0.4]);
+
+
+%% Comparision with H = 6
+
+H = 6;
+
+TSPAN = 0:0.01:0.5;
+
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
+
+[T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
+[T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
 [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-plot(T4,F4);
 
-M = 0.015;
-[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-plot(T4,F4);
+figure
+hold on
+plot(T1,F1); plot(T3,F3); plot(T4,F4);
+legend('No control', 'Droop Control', 'Virtual Inertia');
+title('H = 6');
 
-M = 0.15;
-[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-plot(T4,F4);
 
-M = 1.5;
-[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-plot(T4,F4);
+%% No Control
+clear all;
 
-M = 15;
-[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-plot(T4,F4);
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
 
-hold off
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
 
-title('R = 15, M varying Virtual Inertia');
-legend('M=0.0015', 'M=0.015', 'M=0.15','M=1.5', 'M=15');
+H = 6;
 
+
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
+
+N = B;
+D = [1 -A];
+
+sys = tf(N, D);
+
+[y,t] = step(sys);
+figure
+plot(t, y);
+xlim([0 0.07]); ylim([0 0.02]);
+title('No Control Step Response');
+
+noControlSSE = y(length(y))
+
+S1 = stepinfo(sys)
+
+%% Droop Control
+clear all;
+
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
+
+
+H = 6;
+
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
+
+N = B;
+D = [1 -1*(A + (B/R))];
+sys = tf(N, D);
+
+[y, t] = step(sys);
+figure 
+plot(t, y);
+xlim([0 0.07]); ylim([0 0.02]);
+title('Droop Control Step Response');
+
+droopControlSSE = y(length(y))
+
+S2 = stepinfo(sys)
+
+
+%% Virtual Inertia
+
+clear all;
+
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
+
+
+%%%% Functions %%%%
+TSPAN = [0 0.5];
+IC = 0;         % Initial Condition: delta_f(t=0) = 0;
+
+H = 6;
+
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
+
+N = B;
+D = [((B*M)+1) -(A+(B/R))];
+
+sys = tf(N, D);
+
+[y,t] = step(sys);
+figure
+plot(t, y);
+xlim([0 0.07]); ylim([0 0.02]);
+title('Virtual Inertia Step Response');
+
+virtualInertiaSSE = y(length(y))
+
+S3 = stepinfo(sys)
