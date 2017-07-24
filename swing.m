@@ -372,7 +372,7 @@ xlim([0 0.4]);
 
 %% Droop Control
 
-H = 0;
+H = 6;
 
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
@@ -383,31 +383,23 @@ hold on
 [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
 plot(T1,F1,'k');
 
-for R = [0.15 15 1500]
+for R = [0.0015 0.015 0.15 15 1500]
 
-    for M = [0.0015 0.15 15]
-
-        [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R, M), TSPAN, IC);
-        plot(T3,F3);
-        
-    end
+    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
+    plot(T3,F3);
     
 end
 
-str0 = strcat('R=',num2str(0.15),' M=', num2str(0.0015));
-str1 = strcat('R=',num2str(0.15),' M=', num2str(0.15));
-str2 = strcat('R=',num2str(0.15),' M=', num2str(15));
-str3 = strcat('R=',num2str(15),' M=', num2str(0.0015));
-str4 = strcat('R=',num2str(15),' M=', num2str(0.15));
-str5 = strcat('R=',num2str(15),' M=', num2str(15));
-str6 = strcat('R=',num2str(1500),' M=', num2str(0.0015));
-str7 = strcat('R=',num2str(1500),' M=', num2str(0.15));
-str8 = strcat('R=',num2str(1500),' M=', num2str(15));
+str0 = strcat('R=',num2str(0.0015));
+str1 = strcat('R=',num2str(0.015));
+str2 = strcat('R=',num2str(0.15));
+str3 = strcat('R=',num2str(15));
+str4 = strcat('R=',num2str(1500));
 
-legend('No Control', str0, str1, str2, str3, str4, str5, str6, str7, str8);
-title('Virtual Inertia');
-ylim([-0.065 0.005]);
-xlim([0 0.4]);
+legend('No Control', str0, str1, str2, str3, str4);
+title('Droop Control');
+%ylim([-0.065 0.005]);
+%xlim([0 0.4]);
 
 
 %% Comparision with H = 6
@@ -433,6 +425,8 @@ title('H = 6');
 %% No Control
 clear all;
 
+format long
+
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
@@ -456,8 +450,8 @@ sys = tf(N, D);
 [y,t] = step(sys);
 figure
 plot(t, y);
-xlim([0 0.07]); ylim([0 0.02]);
-title('No Control Step Response');
+xlim([0 0.07]); ylim([0 0.021]);
+title('No Control Step Response H = 6');
 
 noControlSSE = y(length(y))
 
@@ -465,6 +459,8 @@ S1 = stepinfo(sys)
 
 %% Droop Control
 clear all;
+
+format long
 
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
@@ -474,31 +470,35 @@ q = 0;          % power generation set point
 R = 15;         % droop coefficient
 M = 0.15;       % virtual inertia
 % Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
-
+figure
+hold on
 
 H = 6;
 
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
 
-N = B;
-D = [1 -1*(A + (B/R))];
-sys = tf(N, D);
+for R = [0.02 0.021 0.025 0.15]
+    R
+    N = B;
+    D = [1 -1*(A + (B/R))];
+    sys = tf(N, D);
 
-[y, t] = step(sys);
-figure 
-plot(t, y);
-xlim([0 0.07]); ylim([0 0.02]);
-title('Droop Control Step Response');
+    [y, t] = step(sys);
+     
+    plot(t, y);
+    %xlim([0 0.07]); ylim([0 0.021]);
+    title('Droop Control Step Response H = 6');
 
-droopControlSSE = y(length(y))
+    droopControlSSE = y(length(y))
 
-S2 = stepinfo(sys)
-
+    S2 = stepinfo(sys)
+end
 
 %% Virtual Inertia
-
 clear all;
+
+format long
 
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
@@ -527,9 +527,48 @@ sys = tf(N, D);
 [y,t] = step(sys);
 figure
 plot(t, y);
-xlim([0 0.07]); ylim([0 0.02]);
-title('Virtual Inertia Step Response');
+xlim([0 0.07]); ylim([0 0.021]);
+title('Virtual Inertia Step Response H = 6');
 
 virtualInertiaSSE = y(length(y))
 
 S3 = stepinfo(sys)
+
+%% Droop Control Rise Time Heat Map
+
+clear all;
+H = 6;
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+ii = 0; jj = 0;
+Hvec = 0.1:0.1:10;
+Rvec = 0.1:0.1:10;
+
+matrix = zeros(100,100);
+
+for ii = 1:length(Rvec)  % y axis rows
+    for jj = 1:length(Hvec)  % x axis columns
+        
+        R = Rvec(ii);
+        H = Hvec(jj);
+        
+        A = -1*(f_0/(2*H*S_B*D));
+        B = (f_0/(2*H*S_B));
+
+        Num = B;
+        Denom = [1 -1*(A + (B/R))];
+        sys = tf(Num, Denom);
+        S = stepinfo(sys);
+
+        rise = S.RiseTime;
+        
+        matrix(ii,jj) = rise;
+        
+    end
+end
+
