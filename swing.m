@@ -9,21 +9,6 @@
 
 clear all; close all; clc;
 
-%% Plot p.u. disturbance function
-
-syms x
-p = piecewise(0.05<x<0.1, 20*(x-0.05), 0.15<x<0.2, -20*(x-0.15), 0.25<x<0.3, 1, 0.35<x<0.4, -1, 0);
-
-figure(1)
-subplot(2,1,1)
-hold on
-fplot(p);
-title('Disturbance p(t)');
-xlabel('time (s)'); ylabel('?P_m - ?P_load');
-xlim([0, 0.5])
-%ylim([-1, 1])
-grid on
-
 %% Inputs
 Hvec = [0.01 0.1 1 6 8 10];
 
@@ -42,7 +27,22 @@ M = 0.15;       % virtual inertia
 TSPAN = [0 0.5];
 IC = 0;         % Initial Condition: delta_f(t=0) = 0;
 
-%% Plot Swing eq no control
+%% Plot p.u. disturbance function
+
+syms x
+p = piecewise(0.05<x<0.1, 20*(x-0.05), 0.15<x<0.2, -20*(x-0.15), 0.25<x<0.3, 1, 0.35<x<0.4, -1, 0);
+
+figure(1)
+subplot(2,1,1)
+hold on
+fplot(p);
+title('Disturbance p(t)');
+xlabel('time (s)'); ylabel('?P_m - ?P_load');
+xlim([0, 0.5])
+%ylim([-1, 1])
+grid on
+
+%% Plot Swing eq no control on fig(1) varying H
 for ii=1:length(Hvec)
     H = Hvec(ii)    % inertia constant
     
@@ -84,10 +84,10 @@ for ii=1:length(Hvec)
 end
 title('Frequency Response with No Control');
 xlabel('time (s)'); ylabel('?f(t)');
-%legend(num2str(Hvec(0)), num2str(Hvec(1)), num2str(Hvec(2)), num2str(Hvec(3)), num2str(Hvec(4)), num2str(Hvec(5)));
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
 hold off
-%% No Control
+
+%% Plot with No Control varying H
 for ii=1:length(Hvec)
     H = Hvec(ii)    % inertia constant
     
@@ -123,10 +123,10 @@ for ii=1:length(Hvec)
 end
 title('Frequency Response with No Control');
 xlabel('time (s)'); ylabel('?f(t)');
-%legend(num2str(Hvec(0)), num2str(Hvec(1)), num2str(Hvec(2)), num2str(Hvec(3)), num2str(Hvec(4)), num2str(Hvec(5)));
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
 hold off
-%% Constant Power
+
+%% Plot Constant Power varying H
 for ii=1:length(Hvec)
     H = Hvec(ii)    % inertia constant
     
@@ -163,7 +163,8 @@ title('Frequency Response with Constant Power');
 xlabel('time (s)'); ylabel('?f(t)');
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
 hold off
-%% Droop Control
+
+%% Plot Droop Control varying H
 for ii=1:length(Hvec)
     H = Hvec(ii)    % inertia constant
     
@@ -199,7 +200,8 @@ title('Frequency Response with Droop Control');
 xlabel('time (s)'); ylabel('?f(t)');
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
 hold off
-%% Virtual Inertia
+
+%% Plot Virtual Inertia varying H
 Hvec = [0.01 0.1 1 6 8 10];
 
 for ii=1:length(Hvec)
@@ -237,9 +239,27 @@ title('Frequency Response with Virtual Inertia');
 xlabel('time (s)'); ylabel('?f(t)');
 legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
 hold off
+%%
+
+
+
+
 
 %% Comparing controllers with H=10
-figure(6)
+clear all;
+
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+
+TSPAN = [0 0.5];
+IC = 0;
+
+figure
 hold on
 H = 10;
 
@@ -255,85 +275,57 @@ plot(T3,F3);
 plot(T4,F4);
 %ylim([-1, 1]);
 legend('No Control', 'Droop Control', 'Virtual Inertia');
+title('All Controllers H=10');
 
-%% Testing Droop Control Parameters
+%% Testing Virtual Inertia Parameters varying M
+clear all;
+
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+
+TSPAN = [0 0.5];
+IC = 0;
 
 H = 6;
-R = 1.5;
 
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
-
-[T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
 
 figure
 hold on
-plot(T3,F3);
+[T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
+plot(T1,F1,'k');
+for M = [0.15 0.75 1.5 7.5 15]
 
-R = 15;
-[T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
-plot(T3,F3);
+    [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+    plot(T4,F4);
+    ylim([-0.025 0.005]);
+    xlim([0 0.2]);
+end
+legend('No Control', 'M=0.15', 'M=0.75', 'M=1.5', 'M=7.5', 'M=15');
+title('Virtual Inertia H=6');
+hold off
 
-R = 150;
-[T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
-plot(T3,F3);
+%% Plot Virtual Inertia varying M and R
+clear all;
 
-legend('R=1.5', 'R=15', 'R=150');
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
 
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
 
-%% Testing Virtual Inertia Parameters
+TSPAN = [0 0.5];
+IC = 0;
 
 H = 6;
-
-A = -1*(f_0/(2*H*S_B*D));
-B = (f_0/(2*H*S_B));
-
-
-for R = [0.15 1.5 15 150 1500]
-    
-    figure
-    hold on
-    [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
-    plot(T1,F1,'k');
-    for M = [0.0015 0.015 0.15 1.5 15]
-
-        [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-        plot(T4,F4);
-        ylim([-0.025 0.005]);
-        xlim([0 0.2]);
-    end
-    legend('No Control', 'M=0.0015', 'M=0.015', 'M=0.15', 'M=1.5', 'M=15');
-    title(num2str(R));
-end
-
-%% 
-
-H = 6;
-
-A = -1*(f_0/(2*H*S_B*D));
-B = (f_0/(2*H*S_B));
-
-
-for M = [0.0015 0.015 0.15 1.5 15]
-    
-    figure
-    hold on
-    [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
-    plot(T1,F1,'k');
-    for R = [0.15 1.5 15 150 1500]
-
-        [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-        plot(T4,F4);
-        ylim([-0.025 0.005]);
-        xlim([0 0.2]);
-    end
-    legend('No Control', 'R=0.15', 'R=1.5', 'R=15', 'R=150', 'R=1500');
-    title(num2str(M));
-end
-
-%%
-
-H = 0;
 
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
@@ -366,11 +358,26 @@ str7 = strcat('R=',num2str(1500),' M=', num2str(0.15));
 str8 = strcat('R=',num2str(1500),' M=', num2str(15));
 
 legend('No Control', str0, str1, str2, str3, str4, str5, str6, str7, str8);
-title('Virtual Inertia');
+title('Virtual Inertia H = 6');
 ylim([-0.065 0.005]);
 xlim([0 0.4]);
 
-%% Droop Control
+%% Plot Droop Control varying R H = 6
+clear all;
+
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+
+TSPAN = [0 0.5];
+IC = 0;
+
+figure
+hold on
 
 H = 6;
 
@@ -383,26 +390,34 @@ hold on
 [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
 plot(T1,F1,'k');
 
-for R = [0.0015 0.015 0.15 15 1500]
+for R = [0.15 1.5 15]
 
     [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
     plot(T3,F3);
     
 end
 
-str0 = strcat('R=',num2str(0.0015));
-str1 = strcat('R=',num2str(0.015));
-str2 = strcat('R=',num2str(0.15));
-str3 = strcat('R=',num2str(15));
-str4 = strcat('R=',num2str(1500));
+str0 = strcat('R=',num2str(0.15));
+str1 = strcat('R=',num2str(1.5));
+str2 = strcat('R=',num2str(15));
 
-legend('No Control', str0, str1, str2, str3, str4);
-title('Droop Control');
-%ylim([-0.065 0.005]);
-%xlim([0 0.4]);
-
+legend('No Control', str0, str1, str2);
+title('Droop Control H = 6')
+hold off
 
 %% Comparision with H = 6
+clear all;
+
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+
+TSPAN = [0 0.5];
+IC = 0;
 
 H = 6;
 
@@ -419,10 +434,15 @@ figure
 hold on
 plot(T1,F1); plot(T3,F3); plot(T4,F4);
 legend('No control', 'Droop Control', 'Virtual Inertia');
-title('H = 6');
+title('All H = 6');
+
+%%
 
 
-%% No Control
+
+
+
+%% Plot No Control Step Resonse H = 6
 clear all;
 
 format long
@@ -457,7 +477,7 @@ noControlSSE = y(length(y))
 
 S1 = stepinfo(sys)
 
-%% Droop Control
+%% Plot Droop Control Step Response H = 6 varying R
 clear all;
 
 format long
@@ -469,7 +489,7 @@ D = 0.02;       % damping coefficient
 q = 0;          % power generation set point
 R = 15;         % droop coefficient
 M = 0.15;       % virtual inertia
-% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
+
 figure
 hold on
 
@@ -478,7 +498,7 @@ H = 6;
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
 
-for R = [0.02 0.021 0.025 0.15]
+for R = [0.021 0.025 0.075 0.15]
     R
     N = B;
     D = [1 -1*(A + (B/R))];
@@ -487,15 +507,22 @@ for R = [0.02 0.021 0.025 0.15]
     [y, t] = step(sys);
      
     plot(t, y);
-    %xlim([0 0.07]); ylim([0 0.021]);
+
     title('Droop Control Step Response H = 6');
 
     droopControlSSE = y(length(y))
 
     S2 = stepinfo(sys)
 end
+str0 = strcat('R=',num2str(0.021));
+str1 = strcat('R=',num2str(0.025));
+str2 = strcat('R=',num2str(0.075));
+str3 = strcat('R=',num2str(0.15));
 
-%% Virtual Inertia
+legend(str0, str1, str2, str3);
+hold off
+
+%% Plot Virtual Inertia Step Response 
 clear all;
 
 format long
@@ -519,22 +546,104 @@ H = 6;
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
 
-N = B;
-D = [((B*M)+1) -(A+(B/R))];
-
-sys = tf(N, D);
-
-[y,t] = step(sys);
 figure
-plot(t, y);
-xlim([0 0.07]); ylim([0 0.021]);
+hold on
+
+for M = [0.15 0.75 1.5 7.5 15]
+
+    N = B;
+    D = [((B*M)+1) -(A+(B/R))];
+
+    sys = tf(N, D);
+
+    [y,t] = step(sys);
+    figure
+    plot(t, y);
+    
+    virtualInertiaSSE = y(length(y))
+
+    S3 = stepinfo(sys)
+end
+%xlim([0 0.07]); ylim([0 0.021]);
+
 title('Virtual Inertia Step Response H = 6');
+str0 = strcat('M=',num2str(0.15));
+str1 = strcat('M=',num2str(0.75));
+str2 = strcat('M=',num2str(1.5));
+str3 = strcat('M=',num2str(7.5));
+str4 = strcat('M=',num2str(15));
 
-virtualInertiaSSE = y(length(y))
+legend(str0, str1, str2, str3, str4);
+hold off
 
-S3 = stepinfo(sys)
+%%
 
-%% Droop Control Rise Time Heat Map
+
+
+
+
+
+%% Droop Control Rise Time Matrix
+
+clear all;
+H = 6;
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+
+Hvec = 0.1:0.1:10;
+Rvec = 0.025:0.025:1;
+
+%riseMatrix = zeros(40,100);
+%sseMatrix = zeros(40,100);
+
+for jj = 1:length(Hvec)  % x axis columns    
+    for ii = 1:length(Rvec)  % y axis rows
+        
+        R = Rvec(ii);
+        H = Hvec(jj);
+        
+        A = -1*(f_0/(2*H*S_B*D));
+        B = (f_0/(2*H*S_B));
+
+        Num = B;
+        Denom = [1 -1*(A + (B/R))];
+        sys = tf(Num, Denom);
+        
+        % Calculate Steady State Error
+        [t,y] = step(sys);
+        DsseMatrix(ii,jj) = y(length(y));
+        
+        % Calculate Risetime
+        S = stepinfo(sys);
+        rise = S.RiseTime;
+        DriseMatrix(ii,jj) = rise;
+        
+    end
+end
+
+%% Droop Control Risetime Heatmap
+
+hD = heatmap(DriseMatrix)
+%hD.ColorLimits = [0.0003 0.03];
+hD.Title = 'Droop Control Risetime, H vs. R';
+hD.XLabel = 'Inertia H = [0.1:0.1:10]';
+hD.YLabel = 'Droop Coefficient R = [0.025:0.025:1]';
+
+%% Droop Control SSE Heatmap
+
+hD = heatmap(DsseMatrix)
+%hD.ColorLimits = [0.0003 0.03];
+hD.Title = 'Droop Control SSE, H vs. R';
+hD.XLabel = 'Inertia H = [0.1:0.1:10]';
+hD.YLabel = 'Droop Coefficient R = [0.025:0.025:1]';
+
+
+%% Virtual Inertia Rise Time Matrix
 
 clear all;
 H = 6;
@@ -546,13 +655,69 @@ q = 0;          % power generation set point
 R = 15;         % droop coefficient
 M = 0.15;       % virtual inertia
 ii = 0; jj = 0;
+Hvec = 0.1:0.5:15;
+Mvec = 0.15:0.15:15;
+
+%Vmatrix = zeros(100,30);
+
+for jj = 1:length(Hvec)  % x axis columns    
+    for ii = 1:length(Mvec)  % y axis rows
+        
+        M = Mvec(ii);
+        H = Hvec(jj);
+        
+        A = -1*(f_0/(2*H*S_B*D));
+        B = (f_0/(2*H*S_B));
+
+        Num = B;
+        Denom = [((B*M)+1) -(A+(B/R))];
+        sys = tf(Num, Denom);
+        
+        % Calculate Steady State Error
+        [t,y] = step(sys);
+        VsseMatrix(ii,jj) = y(length(y));
+        
+        % Calculate Risetime
+        S = stepinfo(sys);
+        rise = S.RiseTime;
+        VriseMatrix(ii,jj) = rise;
+        
+    end
+end
+
+%% Virtual Inertia Risetime Heatmap
+
+hV = heatmap(VriseMatrix)
+hV.Title = 'Virtual Inertia Risetime, H vs. R';
+hV.XLabel = 'Inertia H = [0.1:0.1:10]';
+hV.YLabel = 'Virtual Inertia M = [0.15:0.15:15]';
+
+%% Virtual Inertia SSE Heatmap
+
+hV = heatmap(VsseMatrix)
+hV.Title = 'Virtual Inertia SSE, H vs. R';
+hV.XLabel = 'Inertia H = [0.1:0.1:10]';
+hV.YLabel = 'Virtual Inertia M = [0.15:0.15:15]';
+
+%% Droop Control SSE Matrix
+
+clear all;
+H = 6;
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+
 Hvec = 0.1:0.1:10;
-Rvec = 0.1:0.1:10;
+Rvec = 0.025:0.025:1;
 
-matrix = zeros(100,100);
+Dmatrix = zeros(40,100);
 
-for ii = 1:length(Rvec)  % y axis rows
-    for jj = 1:length(Hvec)  % x axis columns
+for jj = 1:length(Hvec)  % x axis columns    
+    for ii = 1:length(Rvec)  % y axis rows
         
         R = Rvec(ii);
         H = Hvec(jj);
@@ -566,9 +731,27 @@ for ii = 1:length(Rvec)  % y axis rows
         S = stepinfo(sys);
 
         rise = S.RiseTime;
-        
-        matrix(ii,jj) = rise;
+        Dmatrix(ii,jj) = rise;
         
     end
 end
 
+%% Droop Control SSE Heatmap
+
+hD = heatmap(Dmatrix)
+%hD.ColorLimits = [0.0003 0.03];
+hD.Title = 'Droop Control Risetime, H vs. R';
+hD.XLabel = 'Inertia H = [0.1:0.1:10]';
+hD.YLabel = 'Droop Coefficient R = [0.025:0.025:1]';
+
+
+
+%% Make Table
+
+%T = readtable('Droop Control Risetime Heatmap.xlsx', 'ReadVariableNames', false);
+%xlswrite('Droop Control Risetime Heatmap.xlsx', matrix);
+
+%T = table(matrix(:,1), matrix(:,2), matrix(:,3), matix(:,4));
+%h = heatmap(T,'Var1','Var1', 'ColorVariable', 0.02);
+
+%set(hV,  'RowLabels', Rvec, 'ColumnLabels', Hvec)
