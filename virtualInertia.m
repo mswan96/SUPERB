@@ -9,4 +9,4 @@ end
 % Control Variable:
 % u = q - (1/R)*f - M*dfdt
 
-dfdt = ((A - (B*(1/R)))*f + B*(p + q))/(M+1); % Evaluate ODE at times t
+dfdt = (A*f + B*(p + q))/(M+1); % Evaluate ODE at times t
