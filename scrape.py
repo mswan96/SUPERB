@@ -16,7 +16,7 @@
 import requests, csv, sys, datetime
 import numpy as np
 
-# Checks to see if                                              
+# Checks to see if a string is a number                                              
 def is_number(s):
 	try:
 		int(s)
