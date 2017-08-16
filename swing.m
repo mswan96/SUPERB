@@ -5,6 +5,32 @@
 %       This script uses the swing equation to model the frequency response
 %       of a power system after a loss of generation.
 %
+% 44    SECTION 1: Plotting Frequency Response of Controllers
+% 48        1.a: Plot p.u. disturbance function
+% 62        1.b: Plot FR with No Control H={0.1, 1, 5, 10}
+% 96        1.c: Plot Droop Control H={0.1, 1, 5, 10}
+% 133       1.d: Plot Virtual Inertia H={0.1, 1, 5, 10}
+% 171   SECTION 2: Comparing Controllers' Frequency Response
+% 175       2.a: Comparing controllers with H = 1
+% 219       2.b: Testing Droop Control Parameter R = [0.025 0.05 0.25 0.5 2.5], H = 1
+% 266       2.c: Testing Virtual Inertia Parameter M = [0.1 0.5 1 5 10], H = 1
+% 309       2.d: Controller Comparision with Optimal* parameters R and M, H = [0.1 1 5 10]
+% 349   SECTION 3: Plotting Step Response of Controllers
+% 353       3.a: Plot No Control Step Resonse H = 1
+% 388       3.b: Plot Droop Control Step Response R = [0.025 0.05 0.25 0.5 2.5], H = 1
+% 430       3.c: Plot Virtual Inertia Step Response M = [0.1 0.5 1 5 10], H = 1
+% 474       3.d: Plot Both DC&VI Step Response with Optimal* R and M
+% 516   SECTION 4: Heatmaps for Controllers
+% 520       4.a: Droop Control Matrices for Heatmaps
+% 561       4.b: Droop Control Risetime Heatmap
+% 568       4.c: Droop Control Frequency Nadir Heatmap
+% 576       4.d: Virtual Inertia Matrices Heatmaps
+% 617       4.e: Virtual Inertia Risetime Heatmap
+% 624       4.f: Virtual Inertia Frequency Nadir Heatmap
+% 632       4.g: DC&VI Matrices for Heatmaps
+% 673       4.h: DC & VI Risetime Heatmap
+% 680       4.i: DC & VI Frequency Nadir Heatmap
+
 %       * More research needs to go into what would be optimal values of R and M
 %       in terms of feasibility. My "optimal" values are R = 0.15 and M = 15 which
 %       I choose simply because I didn't want to deviate too far from the values
@@ -141,9 +167,9 @@ hold off
 %%
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%% SECTION 2: Comparing Controllers %%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%% SECTION 2: Comparing Controllers Frequency Response %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %% 2.a: Comparing controllers with H = 1
