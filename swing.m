@@ -8,7 +8,8 @@
 %       * More research needs to go into what would be optimal values of R and M
 %       in terms of feasibility. My "optimal" values are R = 0.15 and M = 15 which
 %       I choose simply because I didn't want to deviate too far from the values
-%       used in the Mallada paper (https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf).
+%       used in the Mallada paper: R = 15, M = 0.15
+%       https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf)
 
 clear all; close all; clc;
 
