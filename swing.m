@@ -39,11 +39,6 @@ f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
-q = 0;          % power generation set point
-R = 15;         % droop coefficient
-M = 0.15;       % virtual inertia
-% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
-
 TSPAN = [0 0.5];
 IC = 0;         % Initial Condition: ∆f(t=0) = 0;
 Hvec = [0.1 1 5 10];
@@ -78,10 +73,8 @@ f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
-q = 0;          % power generation set point
 R = 15;         % droop coefficient
-M = 0.15;       % virtual inertia
-% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
+% Value from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
 
 TSPAN = [0 0.5];
 IC = 0;         % Initial Condition: ∆f(t=0) = 0;
@@ -98,7 +91,7 @@ for ii=1:length(Hvec)
     B = (f_0/(2*H*S_B));
 
     % Solve ODE
-    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
+    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, R), TSPAN, IC);
     
     plot(T3, F3);
 end
@@ -117,10 +110,8 @@ f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
-q = 0;          % power generation set point
-R = 15;         % droop coefficient
 M = 0.15;       % virtual inertia
-% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
+% Value from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
 
 TSPAN = [0 0.5];
 IC = 0;         % Initial Condition: ∆f(t=0) = 0;
@@ -137,7 +128,7 @@ for ii=1:length(Hvec)
     B = (f_0/(2*H*S_B));
 
     % Solve ODE
-    [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+    [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, M), TSPAN, IC);
     
     plot(T4, F4);
 end
@@ -161,7 +152,6 @@ f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
-q = 0;          % power generation set point
 R = 0.15;       % droop coefficient (optimal* value)
 M = 15;         % virtual inertia (optimal* value)
 
@@ -177,9 +167,9 @@ A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
 
 [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
-[T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
-[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-[T5, F5] = ode45(@(t,f) both(t, f, A, B, q, R, M), TSPAN, IC);
+[T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, R), TSPAN, IC);
+[T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, M), TSPAN, IC);
+[T5, F5] = ode45(@(t,f) both(t, f, A, B, R, M), TSPAN, IC);
 
 plot(T1,F1);
 plot(T3,F3);
@@ -206,9 +196,7 @@ f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
-q = 0;          % power generation set point
 R = 0.15;       % droop coefficient (optimal* value)
-M = 15;         % virtual inertia (optimal* value)
 
 TSPAN = [0 0.5];
 IC = 0;         % Initial Condition: ∆f(t=0) = 0;
@@ -234,7 +222,7 @@ Nmin = min(F1); % Frequency Nadir for No Control
 
 for R = [0.025 0.05 0.25 0.5 2.5]
     % Solve ODE with Droop Control
-    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
+    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, R), TSPAN, IC);
     plot(T3,F3);
     
     Dmin = min(F3); % Frequncy Nadir for Droop Control
@@ -255,8 +243,6 @@ f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
-q = 0;          % power generation set point
-R = 0.15;       % droop coefficient (optimal* value)
 M = 15;         % virtual inertia (optimal* value)
 
 TSPAN = [0 0.5];
@@ -280,7 +266,7 @@ Nmin = min(F1); % Frequency Nadir for No Control
 
 for M = [0.1 0.5 1 5 10]
     % Solve ODE with Virtual Inertia
-    [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+    [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, M), TSPAN, IC);
     plot(T4,F4);
     
     Vmin = min(F3); % Frequncy Nadir for Virtual Inertia
@@ -300,7 +286,6 @@ f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
-q = 0;          % power generation set point
 R = 0.15;       % droop coefficient (optimal* value)
 M = 15;         % virtual inertia (optimal* value)
 
@@ -317,9 +302,9 @@ for H = [0.1 1 5 10]
     figure
     hold on
     [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
-    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
-    [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-    [T5, F5] = ode45(@(t,f) both(t, f, A, B, q, R, M), TSPAN, IC);
+    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, R), TSPAN, IC);
+    [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, M), TSPAN, IC);
+    [T5, F5] = ode45(@(t,f) both(t, f, A, B, R, M), TSPAN, IC);
 
     plot(T1,F1); plot(T3,F3); plot(T4,F4);plot(T5, F5);
     xlim([0.03 0.16]); ylim([-0.021 0.001]);
@@ -346,10 +331,6 @@ format long
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
-
-q = 0;          % power generation set point
-R = 0.15;       % droop coefficient (optimal* value)
-M = 15;         % virtual inertia (optimal* value)
 
 H = 1;          % Inertia Constant
 
@@ -385,10 +366,6 @@ format long
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
-
-q = 0;          % power generation set point
-R = 0.15;       % droop coefficient (optimal* value)
-M = 15;         % virtual inertia (optimal* value)
 
 H = 1;          % Inertia Constant
 
@@ -431,10 +408,6 @@ format long
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
-
-q = 0;          % power generation set point
-R = 0.15;       % droop coefficient (optimal* value)
-M = 15;         % virtual inertia (optimal* value)
 
 H = 1;          % Inertia Constant
 
@@ -480,7 +453,6 @@ f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
-q = 0;          % power generation set point
 R = 0.15;       % droop coefficient (optimal* value)
 M = 15;         % virtual inertia (optimal* value)
 
@@ -518,16 +490,12 @@ title('DC & VI Step Response H = 1');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%% 4.a: Droop Control Heatmap Matrix
+%% 4.a: Droop Control Matrices for Heatmaps
 clear all;
 
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
-
-q = 0;          % power generation set point
-R = 0.15;       % droop coefficient (optimal* value)
-M = 15;         % virtual inertia (optimal* value)
 
 TSPAN = [0 0.5];
 IC = 0;         % Initial Condition: ∆f(t=0) = 0;
@@ -551,53 +519,45 @@ for jj = 1:length(Hvec)  % x axis columns
         sys = tf(Num, Denom); % Create transfer function
         
         % Calculate Frequency Nadir Matrix
-        [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
-        Dmin = min(F3);
+        [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, R), TSPAN, IC);
+        Dmin = min(F3); % Get frequency nadir
         DnadirMatrix(ii,jj) = Dmin;
         
         % Calculate Risetime
-        S = stepinfo(sys);
-        rise = S.RiseTime;
+        S = stepinfo(sys); % Step Response object
+        rise = S.RiseTime; % Get rise time
         DriseMatrix(ii,jj) = rise;
         
     end
 end
 
-%% Droop Control Risetime Heatmap
+%% 4.b: Droop Control Risetime Heatmap
 
 hDR = heatmap(DriseMatrix);
-%hD.ColorLimits = [0.0003 0.03];
-hDR.Title = 'Droop Control Risetime, H vs. R';
+hDR.Title = 'DC Rise Time (s)';
 hDR.XLabel = 'Inertia H = [0.1 10]';
-hDR.YLabel = 'Droop Coefficient R = [0.05 1]';
+hDR.YLabel = 'Droop Coefficient R = [0.025 0.25]';
 
-%% Droop Control Nadir Heatmap
+%% 4.c: Droop Control Frequency Nadir Heatmap
 
 hDN = heatmap(DnadirMatrix);
-%hD.ColorLimits = [0.0003 0.03];
-hDN.Title = 'Droop Control Nadir, H vs. R';
+hDN.Title = 'DC Frequency Nadir (Hz)';
 hDN.XLabel = 'Inertia H = [0.1 10]';
-hDN.YLabel = 'Droop Coefficient R = [0.05 1]';
+hDN.YLabel = 'Droop Coefficient R = [0.025 0.25]';
 
 
-%% Virtual Inertia Rise Time Matrix
+%% 4.d: Virtual Inertia Matrices Heatmaps
+clear all;
 
-%clear all;
-H = 6;
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
-q = 0;          % power generation set point
-R = 15;         % droop coefficient
-M = 0.15;       % virtual inertia
-
 TSPAN = [0 0.5];
-IC = 0;
+IC = 0;         % Initial Condition: ∆f(t=0) = 0;
 
-ii = 0; jj = 0;
-Hvec = 0.1:1:10;
-Mvec = 0.1:1:10;
+Hvec = 0.1:1:10; % Vector for inertia constant H
+Mvec = 0.1:1:10; % Vector for virtual inertia M
 
 
 for jj = 1:length(Hvec)  % x axis columns    
@@ -606,79 +566,93 @@ for jj = 1:length(Hvec)  % x axis columns
         M = Mvec(ii);
         H = Hvec(jj);
         
+        % Calculate coefficients for ODE
         A = -1*(f_0/(2*H*S_B*D));
         B = (f_0/(2*H*S_B));
 
-        Num = B;
-        Denom = [((B*M)+1) -(A+(B/R))];
-        sys = tf(Num, Denom);
+        Num = B; % Numerator for transfer function
+        Denom = [((B*M)+1) -(A+(B/R))]; % Denominator for transfer function
+        sys = tf(Num, Denom); % Create tranfer function
         
-        % Calculate Steady State Error
-        [t,y] = step(sys);
-        VsseMatrix(ii,jj) = y(length(y));
-        
-        % Calculate Frequency Nadir
-        [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-        Vmin = min(F4);
+        % Calculate Frequency Nadir Matrix
+        [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, M), TSPAN, IC);
+        Vmin = min(F4); % Get frequency nadir
         VnadirMatrix(ii,jj) = Vmin;
 
-        % Calculate Risetime
-        S = stepinfo(sys);
-        rise = S.RiseTime;
+        % Calculate Rise Time Matrix
+        S = stepinfo(sys); % Step Response object
+        rise = S.RiseTime; % Get rise time
         VriseMatrix(ii,jj) = rise;
         
     end
 end
 
-%% Virtual Inertia Risetime Heatmap
+%% 4.e: Virtual Inertia Risetime Heatmap
 
 hVR = heatmap(VriseMatrix);
-hVR.Title = 'Virtual Inertia Risetime, H vs. M';
+hVR.Title = 'VI Rise Time (s)';
 hVR.XLabel = 'Inertia H = [0.1 10]';
-hVR.YLabel = 'Virtual Inertia M = [0.15 15]';
+hVR.YLabel = 'Virtual Inertia M = [0.1 10]';
 
-%% Virtual Inertia SSE Heatmap
+%% 4.f: Virtual Inertia Frequency Nadir Heatmap
 
 hVN = heatmap(VnadirMatrix);
-hVN.Title = 'Virtual Inertia Frequency Nadir, H vs. M';
+hVN.Title = 'VI Frequency Nadir (Hz);
 hVN.XLabel = 'Inertia H = [0.1 10]';
-hVN.YLabel = 'Virtual Inertia M = [0.15 15]';
+hVN.YLabel = 'Virtual Inertia M = [0.1 10]';
 
 
-%%
-figure
-% Droop Control Risetime Heatmap
-%subplot(2,2,1);
-hDR = heatmap(DriseMatrix);
-hDR.ColorLimits = [0 0.4];
-hDR.Title = 'Droop Control Risetime';
-hDR.XLabel = 'H = [0.1 10]';
-hDR.YLabel = 'R = [0.025 0.25]';
+%% 4.g: DC&VI Matrices for Heatmaps
+clear all;
 
-% Droop Control Nadir Heatmap
-figure
-%subplot(2,2,2);
-hDN = heatmap(DnadirMatrix);
-hDN.ColorLimits = [-0.02 -0.01];
-hDN.Title = 'Droop Control Frequency Nadir';
-hDN.XLabel = 'H = [0.1 10]';
-hDN.YLabel = 'R = [0.025 0.25]';
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
 
-% Virtual Inertia Risetime Heatmap
-figure
-%subplot(2,2,3);
-hVR = heatmap(VriseMatrix);
-hVR.ColorLimits = [0 0.4];
-hVR.Title = 'Virtual Inertia Risetime';
-hVR.XLabel = 'H = [0.1 10]';
-hVR.YLabel = 'M = [0.1 10]';
+TSPAN = [0 0.5];
+IC = 0;         % Initial Condition: ∆f(t=0) = 0;
 
-% Virtual Inertia SSE Heatmap
-figure
-%subplot(2,2,4);
-hVN = heatmap(VnadirMatrix);
-hVN.ColorLimits = [-0.02 -0.01];
-hVN.Title = 'Virtual Inertia Frequency Nadir';
-hVN.XLabel = 'H = [0.1 10]';
-hVN.YLabel = 'M = [0.1 10]';
+Rvec = 0.025:0.025:0.25; % Vector for droop coefficient R
+Mvec = 0.1:1:10; % Vector for virtual inertia M
 
+
+for jj = 1:length(Rvec)  % x axis columns    
+    for ii = 1:length(Mvec)  % y axis rows
+        
+        M = Mvec(ii);
+        R = Rvec(jj);
+        
+        % Calculate coefficients for ODE
+        A = -1*(f_0/(2*H*S_B*D));
+        B = (f_0/(2*H*S_B));
+
+        Num = B; % Numerator for transfer function
+        Denom = [((B*M)+1) -(A+(B/R))]; % Denominator for transfer function
+        sys = tf(Num, Denom); % Create tranfer function
+        
+        % Calculate Frequency Nadir Matrix
+        [T4, F4] = ode45(@(t,f) both(t, f, A, B, R, M), TSPAN, IC);
+        Bmin = min(F4); % Get frequency nadir
+        BnadirMatrix(ii,jj) = Bmin;
+
+        % Calculate Rise Time Matrix
+        S = stepinfo(sys); % Step Response object
+        rise = S.RiseTime; % Get rise time
+        BriseMatrix(ii,jj) = rise;
+        
+    end
+end
+
+%% 4.h: DC & VI Risetime Heatmap
+
+hBR = heatmap(BriseMatrix);
+hBR.Title = 'DC&VI Rise Time (s)';
+hBR.XLabel = 'Droop Coefficient R = [0.025 0.25]';
+hBR.YLabel = 'Virtual Inertia M = [0.1 10]';
+
+%% 4.i: DC & VI Frequency Nadir Heatmap
+
+hBN = heatmap(BnadirMatrix);
+hBN.Title = 'DC&VI Frequency Nadir (Hz);
+hBN.XLabel = 'Droop Coefficient R = [0.025 0.25]';
+hBN.YLabel = 'Virtual Inertia M = [0.1 10]';
