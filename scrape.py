@@ -15,6 +15,10 @@
 #		Two inputs: Averages all available data for the input month (1-12 2010-2017)
 #		Three inputs: Averages all available data for the input day (1-31 1-12 2010-2017)
 #
+#	All modes return matrix storing hourly averages of generation data. Each column is the type of generation:
+#	For avgRenew it is in the order of: Geothermal, Biomass, Biogas, Small Hydro, Wind Total, Solar PV, Solar Thermal
+#	For avgAll it is in the order of: Renewables, Nuclear, Thermal, Imports, Hydro
+#	Each row is the hour 1-24.
 
 import requests, csv, sys, datetime
 import numpy as np
@@ -350,20 +354,23 @@ def processYear( year ):
 
 ### Main script ###
 if len(sys.argv) < 2: # No input arguments, aggregate all data since 4/20/2010
-	print "No input arguments, average all possible data"
 	year = None
 	month = None
 	day = None
+	print "No input arguments, average all possible data"
+
 elif len(sys.argv) == 2: # There is one argument for year
 	year = int(sys.argv[1])	
 	month = None
 	day = None
 	print "One input argument, average all data for year " + str(year)
+	
 elif len(sys.argv) == 3: # There are two arguments, year, month
 	year = int(sys.argv[1])
 	month = int(sys.argv[2])
 	day = None
 	print "Two input arguments, average all data for month " + str(month) + "/" + str(year)
+	
 elif len(sys.argv) == 4: # There are three arguments, year, month, day
 	year = int(sys.argv[1])	
 	month = int(sys.argv[2])
@@ -380,13 +387,11 @@ totalAll = np.zeros((24,5))
 avgRenew = np.zeros((24,7))
 avgAll = np.zeros((24,5))
 
-
 now = datetime.datetime.now()
 
 currYear = now.year
 currMonth = now.month
 currDay = now.day
-
 
 if year == None:  # Aggregate all data
 	# Start from 04/20/2010
@@ -406,39 +411,25 @@ if year == None:  # Aggregate all data
 
 elif month == None:  # Aggregate data for the year
 	avgRenew, avgAll = processYear(year)
-	#for i in range(0, 24):
-	#	for j in range(0, 7):
-	#		totalRenew[i][j] += Renew[i][j]
-	#	for k in range(0, 5):
-	#		totalAll[i][k] += All[i][k]
-			
+		
 elif day == None:  # Aggregate data for the month
 	avgRenew, avgAll = processMonth(year, month)
-	#for i in range(0, 24):
-	#	for j in range(0, 7):
-	#		totalRenew[i][j] += Renew[i][j]
-	#	for k in range(0, 5):
-	#		totalAll[i][k] += All[i][k]
-			
+	
 elif year == currYear and month == currMonth and day == currDay:  
 	sys.exit("Error: cannot calculate average for today")
+
+elif year < 2010:
+	sys.exit("Error: No data available before 2010")
 
 else:  # Aggregate data for the day
 	avgRenew, avgAll = processDay(year, month, day)
 	
-	
-	#if (Renew.all() != None and All.all() != None):
-	#	for i in range(0, 24):
-	#		for j in range(0, 7):
-	#			totalRenew[i][j] += Renew[i][j]
-	#		for k in range(0, 5):
-	#			totalAll[i][k] += All[i][k]
 
-# Average values
+# Average values over 24 hours
 rAverage = np.mean(totalRenew, axis=0)
 aAverage = np.mean(totalAll, axis=0)
 
-# Print single averaged values
+# Print single averaged value
 #print "Average Geothermal = " + str(rAverage[0])
 #print "Average Biomass = " + str(rAverage[1])
 #print "Average Biogas = " + str(rAverage[2])
@@ -454,7 +445,7 @@ aAverage = np.mean(totalAll, axis=0)
 #print "Average Hydro = " + str(aAverage[4])
 #print
 
-# Print averaged value for each hour
+# Print averaged value for each hour for each source
 # print "Average Geothermal = " + str(Renew[:,0])
 # print "Average Biomass = " + str(Renew[:,1])
 # print "Average Biogas = " + str(Renew[:,2])
