@@ -27,7 +27,7 @@ Swing equation function with both Droop Control and Virtual Inertia control vari
 ## scrape.py
 
 #### To run in terminal:
-./scrape.py:
+./scrape.py.
 ./scrape.py year(2010-current year)
 ./scrape.py year(2010-current year) month(1-12)
 ./scrape.py year(2010-current year) month(1-12) day(1-31)
