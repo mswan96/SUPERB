@@ -3,10 +3,11 @@
 % SUPERB Project 2017
 %
 %       Swing equation with no control. Takes coefficients A and B as
-%       inputs and solves with respect to the step function disturbance p.
+%       inputs and solves with respect to the step disturbance p.
 
 function dfdt = mySwing(t, f, A, B)
 
+% Step disturbance
 if (t >= 0.05) && (t <= 0.1)
     p = -1;
 else
