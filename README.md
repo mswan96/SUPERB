@@ -27,8 +27,12 @@ Swing equation function with both Droop Control and Virtual Inertia control vari
 ## scrape.py
 
 #### To run in terminal:
-./scrape.py.
+./scrape.py
+
 ./scrape.py year(2010-current year)
+
 ./scrape.py year(2010-current year) month(1-12)
+
 ./scrape.py year(2010-current year) month(1-12) day(1-31)
+
 Returns two matrices containg the averaged hourly values for each generation source as formatted on the CAISO Renewables Output Data pages (i.e. http://content.caiso.com/green/renewrpt/20170813_DailyRenewablesWatch.txt). When run, the script should print the matrices formatted without row or column headings. Other printing methods are commented out such as printing the overall average for each source and printing the hourly averages row by row.
