@@ -5,14 +5,36 @@
 %       This script uses the swing equation to model the frequency response
 %       of a power system after a loss of generation.
 %
-% http://matlab.cheme.cmu.edu/2011/08/09/phase-portraits-of-a-system-of-odes/
+%       * More research needs to go into what would be optimal values of R and M
+%       in terms of feasibility. My "optimal" values are R = 0.15 and M = 15 which
+%       I choose simply because I didn't want to deviate too far from the values
+%       used in the Mallada paper (https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf).
 
 clear all; close all; clc;
 
-%% Inputs
-Hvec = [0.1 1 6 8 10];
 
-%%%% Constants %%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%% SECTION 1: Plotting Frequency Response of Controllers %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% 1.a: Plot p.u. disturbance function
+clear all;
+
+syms x
+p = piecewise(0.05<x<0.1, -1, 0);
+
+figure
+hold on
+fplot(p);
+title('Disturbance');
+xlabel('Time(s)'); ylabel('∆P(t) p.u.');
+xlim([0.03 0.16]); ylim([-0.021 0.001]);
+
+
+%% 1.b: Plot FR with No Control H={0.1, 1, 5, 10}
+clear all;
+
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
@@ -22,210 +44,34 @@ R = 15;         % droop coefficient
 M = 0.15;       % virtual inertia
 % Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
 
-
-%%%% Functions %%%%
 TSPAN = [0 0.5];
-IC = 0;         % Initial Condition: delta_f(t=0) = 0;
-
-%% Plot p.u. disturbance function
-
-syms x
-p = piecewise(0.05<x<0.1, -1, 0);
+IC = 0;         % Initial Condition: ∆f(t=0) = 0;
+Hvec = [0.1 1 5 10];
 
 figure
 hold on
-fplot(p);
-title('Disturbance');
-xlabel('Time(s)'); ylabel('?P(t) p.u.');
-xlim([0.03, 0.16])
-ylim([-1.1, 0.1])
 
-%% Plot with No Control varying H
 for ii=1:length(Hvec)
-    H = Hvec(ii)    % inertia constant
+    H = Hvec(ii);    % inertia constant
     
-    %%%% Coefficients %%%%
+    % Calculate coefficients for ODE
     A = -1*(f_0/(2*H*S_B*D));
     B = (f_0/(2*H*S_B));
 
     % Solve ODE
     [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
 
-    figure(1)
-    hold on
-    subplot(4,1,2)
-    if ii == 1
-        plot(T1, F1);
-
-    elseif ii == 2
-        plot(T1, F1);
-
-    elseif ii == 3
-        plot(T1, F1);
-
-    elseif ii == 4
-        plot(T1, F1);
-
-    elseif ii == 5 
-        plot(T1, F1);
-
-    else
-        plot(T1, F1);
-
-    end
-    xlim([0, 0.15])
+    plot(T1, F1);
 end
 title('Frequency Response with No Control');
-xlabel('Time(s)'); ylabel('?f(t)');
-
-str1 = strcat('H=',num2str(0.1));
-str2 = strcat('H=',num2str(1));
-str3 = strcat('H=',num2str(6));
-str4 = strcat('H=',num2str(8));
-str5 = strcat('H=',num2str(10));
-
-legend(str1, str2, str3, str4, str5);
-hold off
-
-%% Plot Constant Power varying H
-for ii=1:length(Hvec)
-    H = Hvec(ii)    % inertia constant
-    
-    %%%% Coefficients %%%%
-    A = -1*(f_0/(2*H*S_B*D));
-    B = (f_0/(2*H*S_B));
-
-    [T2, F2] = ode45(@(t,f) constantPower(t, f, A, B, q), TSPAN, IC);
-    
-    figure(3)
-    hold on
-
-    if ii == 1
-        plot(T2, F2, 'r:');
-
-    elseif ii == 2
-        plot(T2, F2, 'g--');
-
-    elseif ii == 3
-        plot(T2, F2, 'c-.');
-
-    elseif ii == 4
-        plot(T2, F2, 'b-');
-
-    elseif ii == 5 
-        plot(T2, F2, 'm:');
-
-    else
-        plot(T2, F2, 'k--');
-    end
-    xlim([0, 0.15])
-    
-end
-title('Frequency Response with Constant Power');
-xlabel('time (s)'); ylabel('?f(t)');
-legend(num2str(0.01), num2str(0.1), num2str(1), num2str(6), num2str(8), num2str(10));
-hold off
-
-%% Plot Droop Control varying H
-for ii=1:length(Hvec)
-    H = Hvec(ii)    % inertia constant
-    
-    %%%% Coefficients %%%%
-    A = -1*(f_0/(2*H*S_B*D));
-    B = (f_0/(2*H*S_B));
-
-    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
-    
-    figure(1)
-    hold on
-    subplot(4,1,3)
-
-    if ii == 1
-        plot(T3, F3);
-
-    elseif ii == 2
-        plot(T3, F3);
-
-    elseif ii == 3
-        plot(T3, F3);
-
-    elseif ii == 4
-        plot(T3, F3);
-
-    elseif ii == 5 
-        plot(T3, F3);
-
-    else
-        plot(T3, F3);
-    end
-    xlim([0, 0.15])
-end
-title('Frequency Response with Droop Control');
-xlabel('Time(s)'); ylabel('?f(t)');
-
-str1 = strcat('H=',num2str(0.1));
-str2 = strcat('H=',num2str(1));
-str3 = strcat('H=',num2str(6));
-str4 = strcat('H=',num2str(8));
-str5 = strcat('H=',num2str(10));
-
-legend(str1, str2, str3, str4, str5);
-hold off
-
-%% Plot Virtual Inertia varying H
-
-for ii=1:length(Hvec)
-    H = Hvec(ii)    % inertia constant
-    
-    %%%% Coefficients %%%%
-    A = -1*(f_0/(2*H*S_B*D));
-    B = (f_0/(2*H*S_B));
-
-    [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
-    
-    figure(1)
-    hold on
-    subplot(4,1,4)
-
-    if ii == 1
-        plot(T4, F4);
-
-    elseif ii == 2
-        plot(T4, F4);
-
-    elseif ii == 3
-        plot(T4, F4);
-
-    elseif ii == 4
-        plot(T4, F4);
-
-    elseif ii == 5 
-        plot(T4, F4);
-        
-    else
-        plot(T4, F4);
-    end
-    xlim([0, 0.15])
-end
-title('Frequency Response with Virtual Inertia Control');
-xlabel('Time(s)'); ylabel('?f(t)');
-
-str1 = strcat('H=',num2str(0.1));
-str2 = strcat('H=',num2str(1));
-str3 = strcat('H=',num2str(6));
-str4 = strcat('H=',num2str(8));
-str5 = strcat('H=',num2str(10));
-
-legend(str1, str2, str3, str4, str5);
+xlabel('Time(s)'); ylabel('∆f(t)');
+xlim([0.03 0.16]); ylim([-0.021 0.001]);
+legend('H=0.1', 'H=1', 'H=5', 'H=10');
 
 hold off
-%%
 
 
-
-
-
-%% Comparing controllers with H=1
+%% 1.c: Plot Droop Control H={0.1, 1, 5, 10}
 clear all;
 
 f_0 = 60;       % nominal frequency
@@ -233,16 +79,100 @@ S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
 q = 0;          % power generation set point
-R = 0.15;         % droop coefficient
-M = 15;       % virtual inertia
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
 
 TSPAN = [0 0.5];
-IC = 0;
+IC = 0;         % Initial Condition: ∆f(t=0) = 0;
+Hvec = [0.1 1 5 10];
 
 figure
 hold on
-H = 10;
 
+for ii=1:length(Hvec)
+    H = Hvec(ii);    % inertia constant
+    
+    % Calculate coefficients for ODE
+    A = -1*(f_0/(2*H*S_B*D));
+    B = (f_0/(2*H*S_B));
+
+    % Solve ODE
+    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
+    
+    plot(T3, F3);
+end
+title('Frequency Response with Droop Control');
+xlabel('Time(s)'); ylabel('∆f(t)');
+xlim([0.03 0.16]); ylim([-0.021 0.001]);
+legend('H=0.1', 'H=1', 'H=5', 'H=10');
+
+hold off
+
+
+%% 1.d: Plot Virtual Inertia H={0.1, 1, 5, 10}
+clear all;
+
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 15;         % droop coefficient
+M = 0.15;       % virtual inertia
+% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
+
+TSPAN = [0 0.5];
+IC = 0;         % Initial Condition: ∆f(t=0) = 0;
+Hvec = [0.1 1 5 10];
+
+figure
+hold on
+
+for ii=1:length(Hvec)
+    H = Hvec(ii);    % inertia constant
+    
+    %Calculate coefficients for ODE
+    A = -1*(f_0/(2*H*S_B*D));
+    B = (f_0/(2*H*S_B));
+
+    % Solve ODE
+    [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
+    
+    plot(T4, F4);
+end
+title('Frequency Response with Virtual Inertia Control');
+xlabel('Time(s)'); ylabel('∆f(t)');
+xlim([0.03 0.16]); ylim([-0.021 0.001]);
+legend('H=0.1', 'H=1', 'H=5', 'H=10');
+hold off
+%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%% SECTION 2: Comparing Controllers %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% 2.a: Comparing controllers with H = 1
+clear all;
+
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 0.15;       % droop coefficient (optimal* value)
+M = 15;         % virtual inertia (optimal* value)
+
+TSPAN = [0 0.5];
+IC = 0;         % Initial Condition: ∆f(t=0) = 0;
+
+figure
+hold on
+H = 1;
+
+% Calculate coefficients
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
 
@@ -256,19 +186,20 @@ plot(T3,F3);
 plot(T4,F4);
 plot(T5,F5);
 
-xlim([0.03 0.16]); ylim([-0.021 0.001]);
 legend('None', 'DC', 'VI', 'DC & VI');
 title('Frequency Response H = 1');
-xlabel('Time(s)'); ylabel('?f(t)');
+xlabel('Time(s)'); ylabel('∆f(t)');
+xlim([0.03 0.16]); ylim([-0.021 0.001]);
 
+% Calculating Frequency Nadir
 [Nmin, indx] = min(F1);
-time = T1(indx)
-Dmin = min(F3);
-Vmin = min(F4);
-Bmin = min(F5);
+time = T1(indx);
+Dmin = min(F3)  % Droop Control Freq. Nadir
+Vmin = min(F4)  % Virtual Inertia Freq. Nadir
+Bmin = min(F5)  % DC & VI (Both) Freq. Nadir
 
 
-%% Testing Virtual Inertia Parameters varying M
+%% 2.b: Testing Droop Control Parameter R = [0.025 0.05 0.25 0.5 2.5], H = 1
 clear all;
 
 f_0 = 60;       % nominal frequency
@@ -276,34 +207,93 @@ S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
 q = 0;          % power generation set point
-R = 15;         % droop coefficient
-M = 0.15;       % virtual inertia
+R = 0.15;       % droop coefficient (optimal* value)
+M = 15;         % virtual inertia (optimal* value)
 
 TSPAN = [0 0.5];
-IC = 0;
+IC = 0;         % Initial Condition: ∆f(t=0) = 0;
 
-H = 1;
+figure
+hold on
 
+H = 1;          % Inertia Constant
+
+% Calculate coefficients for ODE
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
 
 figure
 hold on
-[T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
-plot(T1,F1,'k');
-for M = [0.15 0.75 1.5 7.5 15]
 
+% Solve ODE with No Control
+[T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
+
+plot(T1,F1,'k'); % Plot No Control in black for comparison
+
+Nmin = min(F1); % Frequency Nadir for No Control
+
+for R = [0.025 0.05 0.25 0.5 2.5]
+    % Solve ODE with Droop Control
+    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
+    plot(T3,F3);
+    
+    Dmin = min(F3); % Frequncy Nadir for Droop Control
+    diff = Dmin-Nmin % How much the Droop Control reduced the Frequency Nadir
+end
+
+legend('No Control', 'R=0.025', 'R=0.05', 'R=0.25', 'R=0.5', 'R=2.5');
+title('Droop Control H = 1')
+xlabel('Time(s)'); ylabel('∆f(t)');
+xlim([0.03 0.16]); ylim([-0.021 0.001]);
+hold off
+
+
+%% 2.c: Testing Virtual Inertia Parameter M = [0.1 0.5 1 5 10], H = 1
+clear all;
+
+f_0 = 60;       % nominal frequency
+S_B = 1.8;      % p.u. base power
+D = 0.02;       % damping coefficient
+
+q = 0;          % power generation set point
+R = 0.15;       % droop coefficient (optimal* value)
+M = 15;         % virtual inertia (optimal* value)
+
+TSPAN = [0 0.5];
+IC = 0;         % Initial Condition: ∆f(t=0) = 0;
+
+H = 1;
+
+% Calculate coefficients for ODE
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
+
+figure
+hold on
+
+% Solve ODE with No Control
+[T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
+
+plot(T1,F1,'k'); % Plot No Control in black for comparison
+
+Nmin = min(F1); % Frequency Nadir for No Control
+
+for M = [0.1 0.5 1 5 10]
+    % Solve ODE with Virtual Inertia
     [T4, F4] = ode45(@(t,f) virtualInertia(t, f, A, B, q, R, M), TSPAN, IC);
     plot(T4,F4);
     
+    Vmin = min(F3); % Frequncy Nadir for Virtual Inertia
+    diff = Vmin-Nmin % How much the Virtual Vnertia reduced the Frequency Nadir
 end
-legend('No Control', 'M=0.15', 'M=0.75', 'M=1.5', 'M=7.5', 'M=15');
-title('Virtual Inertia H=6');
+legend('No Control', 'M=0.1', 'M=0.5', 'M=1', 'M=5', 'M=10');
+title('Virtual Inertia H=1');
+xlabel('Time(s)'); ylabel('∆f(t)');
 xlim([0.03 0.16]); ylim([-0.021 0.001]);
-
 hold off
 
-%% Plot Droop Control varying R H = 6
+
+%% 2.d: Controller Comparision with Optimal* parameters R and M, H = [0.1 1 5 10]
 clear all;
 
 f_0 = 60;       % nominal frequency
@@ -311,59 +301,11 @@ S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
 q = 0;          % power generation set point
-R = 15;         % droop coefficient
-M = 0.15;       % virtual inertia
+R = 0.15;       % droop coefficient (optimal* value)
+M = 15;         % virtual inertia (optimal* value)
 
 TSPAN = [0 0.5];
-IC = 0;
-
-figure
-hold on
-
-H = 1;
-
-A = -1*(f_0/(2*H*S_B*D));
-B = (f_0/(2*H*S_B));
-
-figure
-hold on
-
-[T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
-plot(T1,F1,'k');
-    Nmin = min(F1);
-
-for R = [0.01 0.5 1 5 10]
-
-    [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
-    plot(T3,F3);
-    Dmin = min(F3);
-    diff = Dmin-Nmin
-end
-str0 = strcat('R=',num2str(0.015));
-str1 = strcat('R=',num2str(0.15));
-str2 = strcat('R=',num2str(1.5));
-str3 = strcat('R=',num2str(15));
-
-legend('No Control', str0, str1, str2, str3);
-title('Droop Control H = 6')
-xlim([0.03 0.16]); ylim([-0.021 0.001]);
-hold off
-
-
-
-%% Comparision varying H
-clear all;
-
-f_0 = 60;       % nominal frequency
-S_B = 1.8;      % p.u. base power
-D = 0.02;       % damping coefficient
-
-q = 0;          % power generation set point
-R = 0.1;         % droop coefficient
-M = 10;       % virtual inertia
-figure
-TSPAN = [0 0.5];
-IC = 0;
+IC = 0;         % Initial Condition: ∆f(t=0) = 0;
 
 ii = 1;
 
@@ -371,7 +313,8 @@ for H = [0.1 1 5 10]
 
     A = -1*(f_0/(2*H*S_B*D));
     B = (f_0/(2*H*S_B));
-    subplot(4, 1, ii);
+    
+    figure
     hold on
     [T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
     [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
@@ -383,17 +326,19 @@ for H = [0.1 1 5 10]
     legend('None', 'DC', 'VI', 'DC & VI');
     str = strcat('H =  ', num2str(H));
     title(str);
-    xlabel('Time(s)'); ylabel('?f(t)');
+    xlabel('Time(s)'); ylabel('∆f(t)');
     ii = ii + 1;
 end
 hold off
 %%
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%% SECTION 3: Plotting Step Response of Controllers %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
-%% Plot No Control Step Resonse H = 6
+%% 3.a: Plot No Control Step Resonse H = 1
 clear all;
 
 format long
@@ -403,32 +348,36 @@ S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
 q = 0;          % power generation set point
-R = 15;         % droop coefficient
-M = 0.15;       % virtual inertia
-% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
+R = 0.15;       % droop coefficient (optimal* value)
+M = 15;         % virtual inertia (optimal* value)
 
-H = 6;
+H = 1;          % Inertia Constant
 
-
+% Calculate coefficients for ODE
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
 
-N = B;
-D = [1 -A];
+Num = B; % Numerator of transfer function
+Denom = [1 -A]; % Denominator of transfer function
 
-sys = tf(N, D);
+sys = tf(Num, Denom); % Create transfer function
 
-[y,t] = step(sys);
+[y,t] = step(sys); % Calculate step response
+
 figure
-plot(t, y);
-xlim([0 0.07]); ylim([0 0.021]);
-title('No Control Step Response H = 6');
 
-noControlSSE = y(length(y))
+plot(t, y); % Plot step response
+%xlim([0 0.07]); ylim([0 0.021]);
+title('No Control Step Response H = 1');
 
-S1 = stepinfo(sys)
+noControlSSE = y(length(y)) % No Control Steady State Error
 
-%% Plot Droop Control Step Response H = 6 varying R
+S = stepinfo(sys); % Step Response object
+
+NCRiseTime = S.RiseTime; % Get rise time of no control step response
+
+
+%% 3.b: Plot Droop Control Step Response R = [0.025 0.05 0.25 0.5 2.5], H = 1
 clear all;
 
 format long
@@ -438,45 +387,43 @@ S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
 q = 0;          % power generation set point
-R = 15;         % droop coefficient
-M = 0.15;       % virtual inertia
+R = 0.15;       % droop coefficient (optimal* value)
+M = 15;         % virtual inertia (optimal* value)
+
+H = 1;          % Inertia Constant
+
+% Calculate coefficients for ODE
+A = -1*(f_0/(2*H*S_B*D));
+B = (f_0/(2*H*S_B));
 
 figure
 hold on
 
-H = 6;
-
-A = -1*(f_0/(2*H*S_B*D));
-B = (f_0/(2*H*S_B));
-
-for R = [0.0000000000000001 0.15 0.75 1.5 7.5 15]
+for R = [0.025 0.05 0.25 0.5 2.5]
+    
     R
-    N = B;
-    D = [1 -1*(A + (B/R))];
-    sys = tf(N, D);
+    
+    Num = B; % Numerator for transfer function
+    Denom = [1 -1*(A + (B/R))]; % Denominator for transfer function
+    
+    sys = tf(Num, Denom); % Create transfer function
 
-    [y, t] = step(sys);
+    [y, t] = step(sys); % Calculate step response
      
-    plot(t, y);
+    plot(t, y); % Plot step response
+    droopControlSSE = y(length(y)) % Droop Control Steady State Error
 
-    title('Droop Control Step Response H = 6');
-
-    droopControlSSE = y(length(y))
-
-    S2 = stepinfo(sys)
+    S = stepinfo(sys); % Step response object
+    
+    DCRiseTime = S.RiseTime % Get rise time of droop control step response
 end
-str0 = strcat('R=',num2str(0));
-str1 = strcat('R=',num2str(0.15));
-str2 = strcat('R=',num2str(0.75));
-str3 = strcat('R=',num2str(1.5));
-str4 = strcat('R=',num2str(7.5));
-str5 = strcat('R=',num2str(15));
-
-
-legend(str0, str1, str2, str3, str4, str5);
+%xlim([0 0.07]); ylim([0 0.021]);
+title('Droop Control Step Response H = 1');
+legend('R=0.025', 'R=0.05', 'R=0.25', 'R=0.5', 'R=2.5');
 hold off
 
-%% Plot Virtual Inertia Step Response 
+
+%% 3.c: Plot Virtual Inertia Step Response M = [0.1 0.5 1 5 10], H = 1
 clear all;
 
 format long
@@ -486,51 +433,45 @@ S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
 q = 0;          % power generation set point
-R = 15;         % droop coefficient
-M = 0.15;       % virtual inertia
-% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
+R = 0.15;       % droop coefficient (optimal* value)
+M = 15;         % virtual inertia (optimal* value)
 
+H = 1;          % Inertia Constant
 
-%%%% Functions %%%%
-TSPAN = [0 0.5];
-IC = 0;         % Initial Condition: delta_f(t=0) = 0;
-
-H = 1;
-
+% Calculate coefficients for ODE
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
 
 figure
 hold on
 
-for M = [0 0.15 0.75 1.5 7.5 15]
+for M = [0.1 0.5 1 5 10]
 
-    N = B;
-    D = [((B*M)+1) -A];
-
-    sys = tf(N, D);
-
-    [y,t] = step(sys);
+    M
     
-    plot(t, y);
-    
-    virtualInertiaSSE = y(length(y))
+    Num = B; % Numerator for transfer function
+    Denom = [((B*M)+1) -A]; % Denominator for transfer function
 
-    S3 = stepinfo(sys)
+    sys = tf(Num, Denom); % Create transfer function
+
+    [y, t] = step(sys); % Calculate step response
+     
+    plot(t, y); % Plot step response
+    
+    virtualInertiaSSE = y(length(y)) % Virtual Inertia Steady State Error
+
+    S = stepinfo(sys); % Step response object
+    
+    VIRiseTime = S.RiseTime % Get rise time of virtual inertia step response
+    
 end
 %xlim([0 0.07]); ylim([0 0.021]);
-
-title('Virtual Inertia Step Response H = 6');
-str0 = strcat('M=',num2str(0.15));
-str1 = strcat('M=',num2str(0.75));
-str2 = strcat('M=',num2str(1.5));
-str3 = strcat('M=',num2str(7.5));
-str4 = strcat('M=',num2str(15));
-
-legend(str0, str1, str2, str3, str4);
+title('Virtual Inertia Step Response H = 1');
+legend('No Control', 'M=0.1', 'M=0.5', 'M=1', 'M=5', 'M=10');
 hold off
 
-%% Plot Both Step Response 
+
+%% 3.d: Plot Both DC&VI Step Response with Optimal* R and M
 clear all;
 
 format long
@@ -540,74 +481,59 @@ S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
 q = 0;          % power generation set point
-R = 0.15;         % droop coefficient
-M = 15;       % virtual inertia
-% Values from: https://mallada.ece.jhu.edu/pubs/2016-M-CDC.pdf
+R = 0.15;       % droop coefficient (optimal* value)
+M = 15;         % virtual inertia (optimal* value)
 
+H = 1;          % Inertia Constant
 
-%%%% Functions %%%%
-TSPAN = [0 0.5];
-IC = 0;         % Initial Condition: delta_f(t=0) = 0;
-
-H = 1;
-
+% Calculate coefficients for ODE
 A = -1*(f_0/(2*H*S_B*D));
 B = (f_0/(2*H*S_B));
 
 figure
-hold on
 
+Num = B; % Numerator for transfer function
+Denom = [((B*M)+1) -(A+(B/R))]; % Denominator for transfer function
 
-Num = B;
-Denom = [((B*M)+1) -(A+(B/R))];
+sys = tf(Num, Denom); % Create transfer function
 
-sys = tf(Num, Denom);
+[y,t] = step(sys); % Calculate step response
 
-[y,t] = step(sys);
+plot(t, y); % Plot step response
 
-plot(t, y);
+DCVISSE = y(length(y)) % DC&VI Steady State Error
 
-bothSSE = y(length(y))
+S = stepinfo(sys); % Step response object
 
-S4 = stepinfo(sys)
+DCVIRiseTime = S.RiseTime % Get rise time for DC&VI step response
 
 %xlim([0 0.07]); ylim([0 0.021]);
-
-title('Virtual Inertia Step Response H = 6');
-str0 = strcat('M=',num2str(0.15));
-str1 = strcat('M=',num2str(0.75));
-str2 = strcat('M=',num2str(1.5));
-str3 = strcat('M=',num2str(7.5));
-str4 = strcat('M=',num2str(15));
-
-legend(str0, str1, str2, str3, str4);
-hold off
-
+title('DC & VI Step Response H = 1');
 
 %%
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%% SECTION 4: Heatmaps for Controllers %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
-
-%% Droop Control Heatmap Matrix
-
+%% 4.a: Droop Control Heatmap Matrix
 clear all;
-H = 6;
+
 f_0 = 60;       % nominal frequency
 S_B = 1.8;      % p.u. base power
 D = 0.02;       % damping coefficient
 
 q = 0;          % power generation set point
-R = 15;         % droop coefficient
-M = 0.15;       % virtual inertia
+R = 0.15;       % droop coefficient (optimal* value)
+M = 15;         % virtual inertia (optimal* value)
 
 TSPAN = [0 0.5];
-IC = 0;
+IC = 0;         % Initial Condition: ∆f(t=0) = 0;
 
-Hvec = 0.1:1:10;
-Rvec = 0.025:0.025:0.25;
+Hvec = 0.1:1:10; % Vector for inertia constant H
+Rvec = 0.025:0.025:0.25; % Vector for droop coefficient R
 
 
 for jj = 1:length(Hvec)  % x axis columns    
@@ -616,21 +542,16 @@ for jj = 1:length(Hvec)  % x axis columns
         R = Rvec(ii);
         H = Hvec(jj);
         
+        % Calculate coefficients for ODE
         A = -1*(f_0/(2*H*S_B*D));
         B = (f_0/(2*H*S_B));
 
-        Num = B;
-        Denom = [1 -1*(A + (B/R))];
-        sys = tf(Num, Denom);
+        Num = B; % Numerator for transfer function
+        Denom = [1 -1*(A + (B/R))]; % Denominator for transfer function
+        sys = tf(Num, Denom); % Create transfer function
         
-        % Calculate Steady State Error
-        [t,y] = step(sys);
-        DsseMatrix(ii,jj) = y(length(y));
-        
-        % Calculate Frequency Nadir
-        %[T1, F1] = ode45(@(t,f) mySwing(t, f, A, B), TSPAN, IC);
+        % Calculate Frequency Nadir Matrix
         [T3, F3] = ode45(@(t,f) droopControl(t, f, A, B, q, R), TSPAN, IC);
-        %Nmin = min(F1);
         Dmin = min(F3);
         DnadirMatrix(ii,jj) = Dmin;
         
