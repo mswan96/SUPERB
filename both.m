@@ -1,4 +1,4 @@
-function dfdt = both(t, f, A, B, q, R, M)
+function dfdt = both(t, f, A, B, R, M)
 
 if (t >= 0.05) && (t <= 0.1)
     p = -1;
@@ -7,6 +7,6 @@ else
 end
 
 % Control Variable:
-% u = q - (1/R)*f - M*dfdt
+% u = -1*(1/R)*f - M*dfdt
 
-dfdt = ((A - (B*(1/R)))*f + B*(p + q))/(M+1); % Evaluate ODE at times t
+dfdt = ((A - (B*(1/R)))*f + B*p)/(M+1); % Evaluate ODE at times t
