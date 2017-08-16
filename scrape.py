@@ -4,13 +4,16 @@
 # scrape.py
 # Megan Swanson
 # SUPERB 
-# 29.6.2017
+# 14.8.2017
 #
-#
-#
-#
-#
-#
+#	Averages hourly energy generation data from CAISO based on type of generation.
+#	http://www.caiso.com/market/Pages/ReportsBulletins/DailyRenewablesWatch.aspx
+#	Four different modes: 
+#		No input: Averages all available data from start(04/20/2010) to the day
+#			  before the current date.
+#		One input: Averages all available data for the input year (2010-2017)
+#		Two inputs: Averages all available data for the input month (1-12 2010-2017)
+#		Three inputs: Averages all available data for the input day (1-31 1-12 2010-2017)
 #
 
 import requests, csv, sys, datetime
@@ -25,9 +28,9 @@ def is_number(s):
 		return False
 
 
-# Process one day and return averages for each type of generation
+# Process one webpage for one day and return matrices of hourly values for each type of generation
 def processDay (year, month, day):
-	# 20170619
+	# 20170619 = date format in url
 	now = datetime.datetime.now()
 
 	currYear = now.year
@@ -52,28 +55,27 @@ def processDay (year, month, day):
 		daystr = "0" + str(day)
 	else: 
 		daystr = str(day)
-
+	
+	# Put date into url format
 	date = str(year) + monthstr + daystr
 
 	url = "http://content.caiso.com/green/renewrpt/" + str(date) + "_DailyRenewablesWatch.txt"
 
+	# Get page 
 	page = requests.get(url)
 
-	if page.status_code == requests.codes.ok:
-		#print date
-		f = open('data.txt', 'r+')
-		f.write(str(page.content))
-		#print f.read()
+	if page.status_code == requests.codes.ok: # Test to make sure url worked
+		f = open('data.txt', 'r+') # Create text file to write page content to
+		f.write(str(page.content)) # Write page content to text file
 		f.close()
-		#print data.txt
-
+		
+		# Create matrices to store data
 		Renewables = np.zeros((24, 7))
 		All = np.zeros((24, 5))
 		avgRenew = np.zeros((24, 7))
-		avgAll = np.zeros((24, 5))
-		#Renewables = [[None for x in range(wR)] for y in range(hR)]
-		#All = [[None for x in range(wA)] for y in range(hA)] 
+		avgAll = np.zeros((24, 5)) 
 
+		# Initialize variables to 0
 		rowCount = 0
 		lineCount = 0
 
@@ -90,58 +92,59 @@ def processDay (year, month, day):
 		thermal = int(0)
 		imports = int(0)
 		hydro = int(0)
-
+		
+		# Page formatting changed after 2012
 		if (year == 2012 and month < 12) or (year < 2012):
 			rColumnsLimit = 14
 		else:
 			rColumnsLimit = 16
 
-
+		# Read data into matrices
 		with open("data.txt") as input:
-			for line in csv.reader(input, delimiter="\t"):
+			for line in csv.reader(input, delimiter="\t"): # Read each line and separate by tabs
+				# Reset count and isEmpty flag
 				columnCount = 0;
 				isEmpty = 0
+				# First table of data (Renewable sources)
 				if lineCount > 1 and lineCount < 26:
 					for x in range(2,rColumnsLimit):
-						if (line[x] != '' and line[x] != None):
-							#print "-------"
-							#print rowCount, columnCount, line[x], int(line[x])
-							if is_number(line[x]):
-								#print int(line[x])
+						if (line[x] != '' and line[x] != None): # Test if there is a value at x
+							if is_number(line[x]):	# Test if value is a number
+								#print "-------"
+								#print rowCount, columnCount, line[x]
 								Renewables[rowCount][columnCount] = int(line[x])
-								#print int(Renewables[rowCount][columnCount])
 								columnCount += 1
 								isEmpty = 1
-								
+								#print Renewables[rowCount][columnCount]
 								#print "-------"
 							else:
 								isEmpty = 0
 								#print "-------"
 								#print rowCount, x, "no data"
 								#print "-------"
-
-					if isEmpty == 1:
+					if isEmpty == 1: # If isEmpty is false, increment rowCount
 						rowCount += 1
+				# Second table of data (All sources)
 				if lineCount > 29 and lineCount < (30+24):
 					for x in range(2,14):
-						if line[x] != '':
-							#print "-------"
-							#print rowCount - 24, columnCount, line[x]
+						if (line[x] != '' and line[x] != None): # Test if there is a value at x
+							
 							if is_number(line[x]):
+								#print "-------"
+								#print rowCount - 25, columnCount, line[x]
 								All[rowCount-25][columnCount] = int(line[x])
 								columnCount += 1
 								isEmpty = 1
+								#print All[rowCount-25][columnCount]
+								#print "-------"
 							else: 
 								isEmpty = 0
-							#print All[rowCount-24][columnCount]
-							#print "-------"
-						#else:
-							#print "-------"
-							#print rowCount, x, "no data"
-							#print "-------"
-					if isEmpty == 1:
+								#print "-------"
+								#print rowCount, x, "no data"
+								#print "-------"
+					if isEmpty == 1: # If isEmpty is false, increment rowCount
 						rowCount += 1
-				lineCount += 1
+				lineCount += 1 # Increment lineCount
 	
 		# for i in range(0, 24):
 		# 	geothermal += Renewables[i][1]
@@ -186,8 +189,9 @@ def processDay (year, month, day):
 		# print ; print "NO DATA FOR: " + str(date); print ;
 		return np.empty(7), np.empty(5)
 
-
+# Process one month and return hourly values averaged over the number of days
 def processMonth( year, month ):
+	# Initialize matrices
 	totalRenew = np.zeros((24,7))
 	totalAll = np.zeros((24,5))
 
@@ -201,18 +205,20 @@ def processMonth( year, month ):
 	currDay = now.day
 
 	#print month
-
-	if year == 2010:
+	isCounted = 1 # Flag for determining if month has already been counted, default is false
+	
+	if year == 2010: # Data begins on 4/20/2010
 		if month == 4: # Finish April
 			days = int(10)
-			for d in range(20, 31):
+			for d in range(20, 31): # Go up to but not including 31
 				Renew, All = processDay(year, month, d)
-				if (Renew.all() != None and All.all() != None):
+				if (Renew.all() != None and All.all() != None): # If processDay worked, add values to total matrices
 					for i in range(0, 24):
 						for j in range(0, 7):
 							totalRenew[i][j] += Renew[i][j]
 						for k in range(0, 5):
 							totalAll[i][k] += All[i][k]
+			isCounted = 0 # Set flag to true
 
 	elif year == currYear:
 		if month == currMonth:  # Only go up to current day
@@ -226,7 +232,7 @@ def processMonth( year, month ):
 						for k in range(0, 5):
 							totalAll[i][k] += All[i][k]
 			
-	if month == 2:  # february has 28 days
+	if month == 2:  # February has 28 days
 		days = int(28)
 		for d in range(1, 29):
 			Renew, All = processDay(year, month, d)
@@ -238,15 +244,16 @@ def processMonth( year, month ):
 						totalAll[i][k] += All[i][k]
 
 	elif month == 4 or month == 6 or month == 9 or month == 11: # Months with 30 days
-		days = int(30)
-		for d in range(1, 31):
-			Renew, All = processDay(year, month, d)
-			if (Renew.all() != None and All.all() != None):
-				for i in range(0, 24):
-					for j in range(0, 7):
-						totalRenew[i][j] += Renew[i][j]
-					for k in range(0, 5):
-						totalAll[i][k] += All[i][k]
+		if isCounted == 1: # Testing for special case when month == 4 to make sure it isn't counted twice
+			days = int(30)
+			for d in range(1, 31):
+				Renew, All = processDay(year, month, d)
+				if (Renew.all() != None and All.all() != None):
+					for i in range(0, 24):
+						for j in range(0, 7):
+							totalRenew[i][j] += Renew[i][j]
+						for k in range(0, 5):
+							totalAll[i][k] += All[i][k]
 	else:  # Months with 31 days
 		days = int(31)
 		for d in range(1, 32):
@@ -257,6 +264,7 @@ def processMonth( year, month ):
 						totalRenew[i][j] += Renew[i][j]
 					for k in range(0, 5):
 						totalAll[i][k] += All[i][k]
+	# Average values
 	for l in range(0, 24):
 		for m in range(0, 7):
 			avgRenew[l][m] = totalRenew[l][m]/days
@@ -279,7 +287,7 @@ def processMonth( year, month ):
 
 	return avgRenew, avgAll
 
-
+# Process one year and return hourly values averaged over the number of months
 def processYear( year ):
 	totalRenew = np.zeros((24,7))
 	totalAll = np.zeros((24,5))
@@ -340,7 +348,7 @@ def processYear( year ):
 
 
 
-
+### Main script ###
 if len(sys.argv) < 2: # No input arguments, aggregate all data since 4/20/2010
 	print "No input arguments, average all possible data"
 	year = None
@@ -365,6 +373,7 @@ elif len(sys.argv) == 4: # There are three arguments, year, month, day
 else:
 	sys.exit("Error: cannot input more than three arguments")
 
+# Initialize matrices
 totalRenew = np.zeros((24,7))
 totalAll = np.zeros((24,5))
 
@@ -380,8 +389,8 @@ currDay = now.day
 
 
 if year == None:  # Aggregate all data
-	print "Average all possible data"
 	# Start from 04/20/2010
+	years = currYear - 2010 + 1
 	for y in range(2010, currYear):
 		Renew, All = processYear(y)
 		for i in range(0, 24):
@@ -389,51 +398,63 @@ if year == None:  # Aggregate all data
 				totalRenew[i][j] += Renew[i][j]
 			for k in range(0, 5):
 				totalAll[i][k] += All[i][k]
+	for l in range(0, 24):
+		for x in range(0, 7):
+			avgRenew[l][x] = totalRenew[l][x]/years
+		for n in range(0, 5):
+			avgAll[l][n] = totalAll[l][n]/years
+
 elif month == None:  # Aggregate data for the year
-	print "Average year " + str(year)
-	Renew, All = processYear(year)
-	for i in range(0, 24):
-		for j in range(0, 7):
-			totalRenew[i][j] += Renew[i][j]
-		for k in range(0, 5):
-			totalAll[i][k] += All[i][k]
+	avgRenew, avgAll = processYear(year)
+	#for i in range(0, 24):
+	#	for j in range(0, 7):
+	#		totalRenew[i][j] += Renew[i][j]
+	#	for k in range(0, 5):
+	#		totalAll[i][k] += All[i][k]
+			
 elif day == None:  # Aggregate data for the month
-	print "Average month " + str(month) + "/" + str(year)
-	Renew, All = processMonth(year, month)
-	for i in range(0, 24):
-		for j in range(0, 7):
-			totalRenew[i][j] += Renew[i][j]
-		for k in range(0, 5):
-			totalAll[i][k] += All[i][k]
+	avgRenew, avgAll = processMonth(year, month)
+	#for i in range(0, 24):
+	#	for j in range(0, 7):
+	#		totalRenew[i][j] += Renew[i][j]
+	#	for k in range(0, 5):
+	#		totalAll[i][k] += All[i][k]
+			
 elif year == currYear and month == currMonth and day == currDay:  
 	sys.exit("Error: cannot calculate average for today")
+
 else:  # Aggregate data for the day
-	print "Average day " + str(month) + "/" + str(day) + "/" + str(year)
-	Renew, All = processDay(year, month, day)
-	if (Renew.all() != None and All.all() != None):
-		for i in range(0, 24):
-			for j in range(0, 7):
-				totalRenew[i][j] += Renew[i][j]
-			for k in range(0, 5):
-				totalAll[i][k] += All[i][k]
+	avgRenew, avgAll = processDay(year, month, day)
+	
+	
+	#if (Renew.all() != None and All.all() != None):
+	#	for i in range(0, 24):
+	#		for j in range(0, 7):
+	#			totalRenew[i][j] += Renew[i][j]
+	#		for k in range(0, 5):
+	#			totalAll[i][k] += All[i][k]
+
+# Average values
 rAverage = np.mean(totalRenew, axis=0)
 aAverage = np.mean(totalAll, axis=0)
 
-print "Average Geothermal = " + str(rAverage[0])
-print "Average Biomass = " + str(rAverage[1])
-print "Average Biogas = " + str(rAverage[2])
-print "Average Small Hydro = " + str(rAverage[3])
-print "Average Wind Total = " + str(rAverage[4])
-print "Average Solar PV = " + str(rAverage[5])
-print "Average Solar Thermal = " + str(rAverage[6])
-print ;
-print "Average Renewables = " + str(aAverage[0])
-print "Average Nuclear = " + str(aAverage[1])
-print "Average Thermal = " + str(aAverage[2])
-print "Average Imports = " + str(aAverage[3])
-print "Average Hydro = " + str(aAverage[4])
-print
+# Print single averaged values
+#print "Average Geothermal = " + str(rAverage[0])
+#print "Average Biomass = " + str(rAverage[1])
+#print "Average Biogas = " + str(rAverage[2])
+#print "Average Small Hydro = " + str(rAverage[3])
+#print "Average Wind Total = " + str(rAverage[4])
+#print "Average Solar PV = " + str(rAverage[5])
+#print "Average Solar Thermal = " + str(rAverage[6])
+#print ;
+#print "Average Renewables = " + str(aAverage[0])
+#print "Average Nuclear = " + str(aAverage[1])
+#print "Average Thermal = " + str(aAverage[2])
+#print "Average Imports = " + str(aAverage[3])
+#print "Average Hydro = " + str(aAverage[4])
+#print
 
+# Print averaged value for each hour
 # print "Average Geothermal = " + str(Renew[:,0])
 # print "Average Biomass = " + str(Renew[:,1])
 # print "Average Biogas = " + str(Renew[:,2])
@@ -448,14 +469,17 @@ print
 # print "Average Imports = " + str(All[:,3])
 # print "Average Hydro = " + str(All[:,4])
 
-for row in Renew:
+
+# Should print formatted matrix for averaged Renewables
+for row in avgRenew:
     for val in row:
         print '{:6}'.format(val),
     print
 
 print
 
-for row in All:
+# Should print formatted matrix for averaged All sources
+for row in avgAll:
     for val in row:
         print '{:4}'.format(val),
     print
