@@ -429,6 +429,27 @@ else:  # Aggregate data for the day
 rAverage = np.mean(totalRenew, axis=0)
 aAverage = np.mean(totalAll, axis=0)
 
+# Prepare format for csv (year, month, day, hour, GEO, BIOM, BIOG, SMHY, WT, SPV, STH, REN, NUC, TH, IMP, HYD)
+final1 = np.zeros((24,4))
+
+for hour in range(0, 24):
+	final1[hour][0] = year
+	final1[hour][1] = month
+	final1[hour][2] = day
+	final1[hour][3] = hour + 1
+
+final2 = np.concatenate((final1, avgRenew), axis=1)
+
+final = np.concatenate((final2, avgAll), axis=1)
+
+# Store results in csv file
+with open('results.csv', 'wb') as csvfile:
+		fileWriter = csv.writer(csvfile, delimiter=',')
+		for row in range(0,24):
+			fileWriter.writerow(final[row])
+
+
+
 # Print single averaged value
 #print "Average Geothermal = " + str(rAverage[0])
 #print "Average Biomass = " + str(rAverage[1])
@@ -462,16 +483,16 @@ aAverage = np.mean(totalAll, axis=0)
 
 
 # Should print formatted matrix for averaged Renewables
-for row in avgRenew:
-    for val in row:
-        print '{:6}'.format(val),
-    print
+# for row in avgRenew:
+#     for val in row:
+#         print '{:6}'.format(val),
+#     print
 
-print
+# print
 
-# Should print formatted matrix for averaged All sources
-for row in avgAll:
-    for val in row:
-        print '{:4}'.format(val),
-    print
+# # Should print formatted matrix for averaged All sources
+# for row in avgAll:
+#     for val in row:
+#         print '{:4}'.format(val),
+#     print
 
