@@ -119,10 +119,10 @@ def processDay (year, month, day):
 								#print "-------"
 								#print rowCount, columnCount, line[x]
 								# Renewables[rowCount][columnCount] = int(line[x])
-								array[rowCount][columnCount] = year
-								array[rowCount][columnCount+1] = month
-								array[rowCount][columnCount+2] = day
-								array[rowCount][columnCount+3] = rowCount+1 # Hour
+								array[rowCount][0] = year
+								array[rowCount][1] = month
+								array[rowCount][2] = day
+								array[rowCount][3] = rowCount+1 # Hour
 								array[rowCount][columnCount+4] = int(line[x])
 								columnCount += 1
 								isEmpty = 1
@@ -144,7 +144,7 @@ def processDay (year, month, day):
 								#print "-------"
 								#print rowCount - 25, columnCount, line[x]
 								# All[rowCount-25][columnCount] = int(line[x])
-								array[rowCount-25][columnCount+11] = int(line[x])
+								array[rowCount-24][columnCount+11] = int(line[x])
 								columnCount += 1
 								isEmpty = 1
 								#print All[rowCount-25][columnCount]
@@ -489,6 +489,8 @@ else:  # Aggregate data for the day
 # final2 = np.concatenate((final1, avgRenew), axis=1)
 
 # final = np.concatenate((final2, avgAll), axis=1)
+
+
 
 # Store results in csv file
 with open('results.csv', 'wb') as csvfile:
