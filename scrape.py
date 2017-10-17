@@ -32,7 +32,7 @@ def is_number(s):
 		return False
 
 
-# Process one webpage for one day and return matrices of hourly values for each type of generation
+# Process one webpage for one day and return array of hourly values for each type of generation
 def processDay (year, month, day):
 	# 20170619 = date format in url
 	now = datetime.datetime.now()
@@ -74,28 +74,30 @@ def processDay (year, month, day):
 		f.close()
 		
 		# Create matrices to store data
-		Renewables = np.zeros((24, 7))
-		All = np.zeros((24, 5))
-		avgRenew = np.zeros((24, 7))
-		avgAll = np.zeros((24, 5)) 
+		# Renewables = np.zeros((24, 7))
+		# All = np.zeros((24, 5))
+		# avgRenew = np.zeros((24, 7))
+		# avgAll = np.zeros((24, 5)) 
+
+		array = np.zeros((24, 16))
 
 		# Initialize variables to 0
 		rowCount = 0
 		lineCount = 0
 
-		geothermal = int(0)
-		biomass = int(0)
-		biogas = int(0)
-		smallHydro = int(0)
-		windTotal = int(0)
-		solarPV = int(0)
-		solarThermal = int(0)
+		# geothermal = int(0)
+		# biomass = int(0)
+		# biogas = int(0)
+		# smallHydro = int(0)
+		# windTotal = int(0)
+		# solarPV = int(0)
+		# solarThermal = int(0)
 
-		renewablesTotal = int(0)
-		nuclear = int(0)
-		thermal = int(0)
-		imports = int(0)
-		hydro = int(0)
+		# renewablesTotal = int(0)
+		# nuclear = int(0)
+		# thermal = int(0)
+		# imports = int(0)
+		# hydro = int(0)
 		
 		# Page formatting changed after 2012
 		if (year == 2012 and month < 12) or (year < 2012):
@@ -116,7 +118,12 @@ def processDay (year, month, day):
 							if is_number(line[x]):	# Test if value is a number
 								#print "-------"
 								#print rowCount, columnCount, line[x]
-								Renewables[rowCount][columnCount] = int(line[x])
+								# Renewables[rowCount][columnCount] = int(line[x])
+								array[rowCount][columnCount] = year
+								array[rowCount][columnCount+1] = month
+								array[rowCount][columnCount+2] = day
+								array[rowCount][columnCount+3] = rowCount+1 # Hour
+								array[rowCount][columnCount+4] = int(line[x])
 								columnCount += 1
 								isEmpty = 1
 								#print Renewables[rowCount][columnCount]
@@ -136,7 +143,8 @@ def processDay (year, month, day):
 							if is_number(line[x]):
 								#print "-------"
 								#print rowCount - 25, columnCount, line[x]
-								All[rowCount-25][columnCount] = int(line[x])
+								# All[rowCount-25][columnCount] = int(line[x])
+								array[rowCount-25][columnCount+11] = int(line[x])
 								columnCount += 1
 								isEmpty = 1
 								#print All[rowCount-25][columnCount]
@@ -187,20 +195,22 @@ def processDay (year, month, day):
 		# print avgAll
 		# print "----------"
 
-		# return avgRenew, avgAll
-		return Renewables, All
+		# return Renewables, All
+		return array
 	else:
 		# print ; print "NO DATA FOR: " + str(date); print ;
-		return np.empty(7), np.empty(5)
+		# return np.empty(7), np.empty(5)
+		return np.empty(24,16)
 
 # Process one month and return hourly values averaged over the number of days
 def processMonth( year, month ):
 	# Initialize matrices
-	totalRenew = np.zeros((24,7))
-	totalAll = np.zeros((24,5))
+	# totalRenew = np.zeros((24,7))
+	# totalAll = np.zeros((24,5))
 
-	avgRenew = np.zeros((24,7))
-	avgAll = np.zeros((24,5))
+	# avgRenew = np.zeros((24,7))
+	# avgAll = np.zeros((24,5))
+
 
 	now = datetime.datetime.now()
 
@@ -214,66 +224,87 @@ def processMonth( year, month ):
 	if year == 2010: # Data begins on 4/20/2010
 		if month == 4: # Finish April
 			days = int(10)
-			for d in range(20, 31): # Go up to but not including 31
-				Renew, All = processDay(year, month, d)
-				if (Renew.all() != None and All.all() != None): # If processDay worked, add values to total matrices
-					for i in range(0, 24):
-						for j in range(0, 7):
-							totalRenew[i][j] += Renew[i][j]
-						for k in range(0, 5):
-							totalAll[i][k] += All[i][k]
+			monthArray = processDay(year, month, 20) # Fencepost first array
+			for d in range(21, 31): # Go up to but not including 31
+				# Renew, All = processDay(year, month, d)
+				dayArray = processDay(year, month, d)
+				# if (Renew.all() != None and All.all() != None and dayArray.all() != None): # If processDay worked, add values to total matrices
+				if (dayArray.all() != None): # If processDay worked, concatenate next day to monthArray
+					monthArray = np.concatenate((monthArray, dayArray), axis=0)
+					# for i in range(0, 24):
+					# 	for j in range(0, 7):
+					# 		totalRenew[i][j] += Renew[i][j]
+					# 		monthArray[i*dayCount][j+4] = dayArray
+					# 	for k in range(0, 5):
+					# 		totalAll[i][k] += All[i][k]
 			isCounted = 0 # Set flag to true
 
 	elif year == currYear:
 		if month == currMonth:  # Only go up to current day
 			days = int(currDay)
-			for d in range(1, currDay):
-				Renew, All = processDay(year, month, d)
-				if (Renew.all() != None and All.all() != None):
-					for i in range(0, 24):
-						for j in range(0, 7):
-							totalRenew[i][j] += Renew[i][j]
-						for k in range(0, 5):
-							totalAll[i][k] += All[i][k]
+			monthArray = processDay(year, month, 1) # Fencepost first array
+			for d in range(2, currDay):
+				# Renew, All = processDay(year, month, d)
+				dayArray = processDay(year, month, d)
+				# if (Renew.all() != None and All.all() != None):
+				if (dayArray.all() != None): # If processDay worked, concatenate next day to monthArray
+					monthArray = np.concatenate((monthArray, dayArray), axis=0)
+					# for i in range(0, 24):
+					# 	for j in range(0, 7):
+					# 		totalRenew[i][j] += Renew[i][j]
+					# 	for k in range(0, 5):
+					# 		totalAll[i][k] += All[i][k]
 			
 	if month == 2:  # February has 28 days
 		days = int(28)
-		for d in range(1, 29):
-			Renew, All = processDay(year, month, d)
-			if (Renew.all() != None and All.all() != None):
-				for i in range(0, 24):
-					for j in range(0, 7):
-						totalRenew[i][j] += Renew[i][j]
-					for k in range(0, 5):
-						totalAll[i][k] += All[i][k]
+		monthArray = processDay(year, month, 1) # Fencepost first array
+		for d in range(2, 29):
+			# Renew, All = processDay(year, month, d)
+			dayArray = processDay(year, month, d)
+			# if (Renew.all() != None and All.all() != None):
+			if (dayArray.all() != None): # If processDay worked, concatenate next day to monthArray
+				monthArray = np.concatenate((monthArray, dayArray), axis=0)
+				# for i in range(0, 24):
+				# 	for j in range(0, 7):
+				# 		totalRenew[i][j] += Renew[i][j]
+				# 	for k in range(0, 5):
+				# 		totalAll[i][k] += All[i][k]
 
 	elif month == 4 or month == 6 or month == 9 or month == 11: # Months with 30 days
 		if isCounted == 1: # Testing for special case when month == 4 to make sure it isn't counted twice
 			days = int(30)
-			for d in range(1, 31):
-				Renew, All = processDay(year, month, d)
-				if (Renew.all() != None and All.all() != None):
-					for i in range(0, 24):
-						for j in range(0, 7):
-							totalRenew[i][j] += Renew[i][j]
-						for k in range(0, 5):
-							totalAll[i][k] += All[i][k]
+			monthArray = processDay(year, month, 1) # Fencepost first array
+			for d in range(2, 31):
+				# Renew, All = processDay(year, month, d)
+				dayArray = processDay(year, month, d)
+				# if (Renew.all() != None and All.all() != None):
+				if (dayArray.all() != None): # If processDay worked, concatenate next day to monthArray
+					monthArray = np.concatenate((monthArray, dayArray), axis=0)
+					# for i in range(0, 24):
+					# 	for j in range(0, 7):
+					# 		totalRenew[i][j] += Renew[i][j]
+					# 	for k in range(0, 5):
+					# 		totalAll[i][k] += All[i][k]
 	else:  # Months with 31 days
 		days = int(31)
-		for d in range(1, 32):
-			Renew, All = processDay(year, month, d)
-			if (Renew.all() != None and All.all() != None):
-				for i in range(0, 24):
-					for j in range(0, 7):
-						totalRenew[i][j] += Renew[i][j]
-					for k in range(0, 5):
-						totalAll[i][k] += All[i][k]
+		monthArray = processDay(year, month, 1) # Fencepost first array
+		for d in range(2, 32):
+			# Renew, All = processDay(year, month, d)
+			dayArray = processDay(year, month, d)
+			# if (Renew.all() != None and All.all() != None):
+			if (dayArray.all() != None): # If processDay worked, concatenate next day to monthArray
+				monthArray = np.concatenate((monthArray, dayArray), axis=0)
+				# for i in range(0, 24):
+				# 	for j in range(0, 7):
+				# 		totalRenew[i][j] += Renew[i][j]
+				# 	for k in range(0, 5):
+				# 		totalAll[i][k] += All[i][k]
 	# Average values
-	for l in range(0, 24):
-		for m in range(0, 7):
-			avgRenew[l][m] = totalRenew[l][m]/days
-		for n in range(0, 5):
-			avgAll[l][n] = totalAll[l][n]/days
+	# for l in range(0, 24):
+	# 	for m in range(0, 7):
+	# 		avgRenew[l][m] = totalRenew[l][m]/days
+	# 	for n in range(0, 5):
+	# 		avgAll[l][n] = totalAll[l][n]/days
 
 	# print "----------"
 	# print days
@@ -289,15 +320,16 @@ def processMonth( year, month ):
 	# print avgAll
 	# print "----------"
 
-	return avgRenew, avgAll
+	# return avgRenew, avgAll
+	return monthArray
 
 # Process one year and return hourly values averaged over the number of months
 def processYear( year ):
-	totalRenew = np.zeros((24,7))
-	totalAll = np.zeros((24,5))
+	# totalRenew = np.zeros((24,7))
+	# totalAll = np.zeros((24,5))
 
-	avgRenew = np.zeros((24,7))
-	avgAll = np.zeros((24,5))
+	# avgRenew = np.zeros((24,7))
+	# avgAll = np.zeros((24,5))
 
 	now = datetime.datetime.now()
 
@@ -306,40 +338,49 @@ def processYear( year ):
 
 	if year == currYear:  # Only go up to current month
 		months = int(currMonth)
-		for m in range(1, months + 1):
-			Renew, All = processMonth(year, m)
-			for i in range(0, 24):
-				for j in range(0, 7):
-					totalRenew[i][j] += Renew[i][j]
-				for k in range(0, 5):
-					totalAll[i][k] += All[i][k]
+		yearArray = processMonth(year, 1) # Fencepost first array
+		for m in range(2, months + 1):
+			# Renew, All = processMonth(year, m)
+			monthArray = processMonth(year, m)
+			yearArray = np.concatenate((yearArray, monthArray), axis=0)
+			# for i in range(0, 24):
+			# 	for j in range(0, 7):
+			# 		totalRenew[i][j] += Renew[i][j]
+			# 	for k in range(0, 5):
+			# 		totalAll[i][k] += All[i][k]
 
 	elif year == 2010:  # Starts in April
 		months = int(9)
-		for m in range(4, 13):  # Finish April
-			Renew, All = processMonth(year, m)
-			for i in range(0, 24):
-				for j in range(0, 7):
-					totalRenew[i][j] += Renew[i][j]
-				for k in range(0, 5):
-					totalAll[i][k] += All[i][k]
+		yearArray = processMonth(year, 4) # Fencepost first array
+		for m in range(5, 13):  # Finish April
+			# Renew, All = processMonth(year, m)
+			monthArray = processMonth(year, m)
+			yearArray = np.concatenate((yearArray, monthArray), axis=0)
+			# for i in range(0, 24):
+			# 	for j in range(0, 7):
+			# 		totalRenew[i][j] += Renew[i][j]
+			# 	for k in range(0, 5):
+			# 		totalAll[i][k] += All[i][k]
 	
 	else:  # Average whole year
 		months = int(12)
-		for m in range(1, 13):
-			Renew, All = processMonth(year, m)
-			for i in range(0, 24):
-				for j in range(0, 7):
-					totalRenew[i][j] += Renew[i][j]
-				for k in range(0, 5):
-					totalAll[i][k] += All[i][k]
+		yearArray = processMonth(year, 1) # Fencepost first array
+		for m in range(2, 13):
+			# Renew, All = processMonth(year, m)
+			monthArray = processMonth(year, m)
+			yearArray = np.concatenate((yearArray, monthArray), axis=0)
+			# for i in range(0, 24):
+			# 	for j in range(0, 7):
+			# 		totalRenew[i][j] += Renew[i][j]
+			# 	for k in range(0, 5):
+			# 		totalAll[i][k] += All[i][k]
 	
 	# Calculate averages for the year
-	for l in range(0, 24):
-		for x in range(0, 7):
-			avgRenew[l][x] = totalRenew[l][x]/months
-		for n in range(0, 5):
-			avgAll[l][n] = totalAll[l][n]/months
+	# for l in range(0, 24):
+	# 	for x in range(0, 7):
+	# 		avgRenew[l][x] = totalRenew[l][x]/months
+	# 	for n in range(0, 5):
+	# 		avgAll[l][n] = totalAll[l][n]/months
 
 	# print days
 	# print "----------"
@@ -348,7 +389,8 @@ def processYear( year ):
 	# print avgAll
 	# print "----------"
 
-	return avgRenew, avgAll	
+	# return avgRenew, avgAll	
+	return yearArray
 
 
 
@@ -357,35 +399,35 @@ if len(sys.argv) < 2: # No input arguments, aggregate all data since 4/20/2010
 	year = None
 	month = None
 	day = None
-	print "No input arguments, average all possible data"
+	print "No input arguments, compile all possible data"
 
 elif len(sys.argv) == 2: # There is one argument for year
 	year = int(sys.argv[1])	
 	month = None
 	day = None
-	print "One input argument, average all data for year " + str(year)
+	print "One input argument, compile all data for year " + str(year)
 	
 elif len(sys.argv) == 3: # There are two arguments, year, month
 	year = int(sys.argv[1])
 	month = int(sys.argv[2])
 	day = None
-	print "Two input arguments, average all data for month " + str(month) + "/" + str(year)
+	print "Two input arguments, compile all data for month " + str(month) + "/" + str(year)
 	
 elif len(sys.argv) == 4: # There are three arguments, year, month, day
 	year = int(sys.argv[1])	
 	month = int(sys.argv[2])
 	day = int(sys.argv[3])
-	print "Three input arguments, average all data for date " + str(month) + "/" + str(day) + "/" + str(year)
+	print "Three input arguments, compile all data for date " + str(month) + "/" + str(day) + "/" + str(year)
 
 else:
 	sys.exit("Error: cannot input more than three arguments")
 
 # Initialize matrices
-totalRenew = np.zeros((24,7))
-totalAll = np.zeros((24,5))
+# totalRenew = np.zeros((24,7))
+# totalAll = np.zeros((24,5))
 
-avgRenew = np.zeros((24,7))
-avgAll = np.zeros((24,5))
+# avgRenew = np.zeros((24,7))
+# avgAll = np.zeros((24,5))
 
 now = datetime.datetime.now()
 
@@ -396,24 +438,29 @@ currDay = now.day
 if year == None:  # Aggregate all data
 	# Start from 04/20/2010
 	years = currYear - 2010 + 1
-	for y in range(2010, currYear):
-		Renew, All = processYear(y)
-		for i in range(0, 24):
-			for j in range(0, 7):
-				totalRenew[i][j] += Renew[i][j]
-			for k in range(0, 5):
-				totalAll[i][k] += All[i][k]
-	for l in range(0, 24):
-		for x in range(0, 7):
-			avgRenew[l][x] = totalRenew[l][x]/years
-		for n in range(0, 5):
-			avgAll[l][n] = totalAll[l][n]/years
+	totalArray = processYear(2010) # Fencepost first array
+	for y in range(2011, currYear):
+		# Renew, All = processYear(y)
+		yearArray = processYear(y)
+		totalArray = np.concatenate((totalArray, yearArray), axis=0)
+		# for i in range(0, 24):
+		# 	for j in range(0, 7):
+		# 		totalRenew[i][j] += Renew[i][j]
+		# 	for k in range(0, 5):
+		# 		totalAll[i][k] += All[i][k]
+	# for l in range(0, 24):
+	# 	for x in range(0, 7):
+	# 		avgRenew[l][x] = totalRenew[l][x]/years
+	# 	for n in range(0, 5):
+	# 		avgAll[l][n] = totalAll[l][n]/years
 
 elif month == None:  # Aggregate data for the year
-	avgRenew, avgAll = processYear(year)
+	# avgRenew, avgAll = processYear(year)
+	totalArray = processYear(year)
 		
 elif day == None:  # Aggregate data for the month
-	avgRenew, avgAll = processMonth(year, month)
+	# avgRenew, avgAll = processMonth(year, month)
+	totalArray = processMonth(year, month)
 	
 elif year == currYear and month == currMonth and day == currDay:  
 	sys.exit("Error: cannot calculate average for today")
@@ -422,31 +469,32 @@ elif year < 2010:
 	sys.exit("Error: No data available before 2010")
 
 else:  # Aggregate data for the day
-	avgRenew, avgAll = processDay(year, month, day)
+	# avgRenew, avgAll = processDay(year, month, day)
+	totalArray = processDay(year, month, day)
 	
 
 # Average values over 24 hours
-rAverage = np.mean(totalRenew, axis=0)
-aAverage = np.mean(totalAll, axis=0)
+# rAverage = np.mean(totalRenew, axis=0)
+# aAverage = np.mean(totalAll, axis=0)
 
-# Prepare format for csv (year, month, day, hour, GEO, BIOM, BIOG, SMHY, WT, SPV, STH, REN, NUC, TH, IMP, HYD)
-final1 = np.zeros((24,4))
+# # Prepare format for csv (year, month, day, hour, GEO, BIOM, BIOG, SMHY, WT, SPV, STH, REN, NUC, TH, IMP, HYD)
+# final1 = np.zeros((24,4))
 
-for hour in range(0, 24):
-	final1[hour][0] = year
-	final1[hour][1] = month
-	final1[hour][2] = day
-	final1[hour][3] = hour + 1
+# for hour in range(0, 24):
+# 	final1[hour][0] = year
+# 	final1[hour][1] = month
+# 	final1[hour][2] = day
+# 	final1[hour][3] = hour + 1
 
-final2 = np.concatenate((final1, avgRenew), axis=1)
+# final2 = np.concatenate((final1, avgRenew), axis=1)
 
-final = np.concatenate((final2, avgAll), axis=1)
+# final = np.concatenate((final2, avgAll), axis=1)
 
 # Store results in csv file
 with open('results.csv', 'wb') as csvfile:
 		fileWriter = csv.writer(csvfile, delimiter=',')
 		for row in range(0,24):
-			fileWriter.writerow(final[row])
+			fileWriter.writerow(totalArray[row])
 
 
 
