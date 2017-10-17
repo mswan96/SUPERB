@@ -230,7 +230,7 @@ def processMonth( year, month ):
 				dayArray = processDay(year, month, d)
 				# if (Renew.all() != None and All.all() != None and dayArray.all() != None): # If processDay worked, add values to total matrices
 				if (dayArray.all() != None): # If processDay worked, append next day to monthArray
-					np.append(monthArray, dayArray, axis=0)
+					monthArray = np.append(monthArray, dayArray, axis=0)
 					# for i in range(0, 24):
 					# 	for j in range(0, 7):
 					# 		totalRenew[i][j] += Renew[i][j]
@@ -248,7 +248,7 @@ def processMonth( year, month ):
 				dayArray = processDay(year, month, d)
 				# if (Renew.all() != None and All.all() != None):
 				if (dayArray.all() != None): # If processDay worked, append next day to monthArray
-					np.append(monthArray, dayArray, axis=0)
+					monthArray = np.append(monthArray, dayArray, axis=0)
 					# for i in range(0, 24):
 					# 	for j in range(0, 7):
 					# 		totalRenew[i][j] += Renew[i][j]
@@ -263,7 +263,7 @@ def processMonth( year, month ):
 			dayArray = processDay(year, month, d)
 			# if (Renew.all() != None and All.all() != None):
 			if (dayArray.all() != None): # If processDay worked, append next day to monthArray
-				np.append(monthArray, dayArray, axis=0)
+				monthArray = np.append(monthArray, dayArray, axis=0)
 				# for i in range(0, 24):
 				# 	for j in range(0, 7):
 				# 		totalRenew[i][j] += Renew[i][j]
@@ -279,7 +279,7 @@ def processMonth( year, month ):
 				dayArray = processDay(year, month, d)
 				# if (Renew.all() != None and All.all() != None):
 				if (dayArray.all() != None): # If processDay worked, append next day to monthArray
-					np.append(monthArray, dayArray, axis=0)
+					monthArray = np.append(monthArray, dayArray, axis=0)
 					# for i in range(0, 24):
 					# 	for j in range(0, 7):
 					# 		totalRenew[i][j] += Renew[i][j]
@@ -288,24 +288,19 @@ def processMonth( year, month ):
 	else:  # Months with 31 days
 		days = int(31)
 		monthArray = processDay(year, month, 1) # Fencepost first array
-		for d in range(2, 4):
+		for d in range(2, 32):
 			# Renew, All = processDay(year, month, d)
 			dayArray = processDay(year, month, d)
-			print d
-			print dayArray
 			# if (Renew.all() != None and All.all() != None):
 			if (dayArray.all() != None): # If processDay worked, append next day to monthArray
-				print "dayArray != None"
 				monthArray = np.append(monthArray, dayArray, axis=0)
-				print monthArray
 				# print monthArray
 				# for i in range(0, 24):
 				# 	for j in range(0, 7):
 				# 		totalRenew[i][j] += Renew[i][j]
 				# 	for k in range(0, 5):
 				# 		totalAll[i][k] += All[i][k]
-			else:
-				print "dayArray.all() = None"
+		
 	# Average values
 	# for l in range(0, 24):
 	# 	for m in range(0, 7):
@@ -349,7 +344,7 @@ def processYear( year ):
 		for m in range(2, months + 1):
 			# Renew, All = processMonth(year, m)
 			monthArray = processMonth(year, m)
-			np.append(yearArray, monthArray, axis=0)
+			yearArray = np.append(yearArray, monthArray, axis=0)
 			# for i in range(0, 24):
 			# 	for j in range(0, 7):
 			# 		totalRenew[i][j] += Renew[i][j]
@@ -362,7 +357,7 @@ def processYear( year ):
 		for m in range(5, 13):  # Finish April
 			# Renew, All = processMonth(year, m)
 			monthArray = processMonth(year, m)
-			np.append(yearArray, monthArray, axis=0)
+			yearArray = np.append(yearArray, monthArray, axis=0)
 			# for i in range(0, 24):
 			# 	for j in range(0, 7):
 			# 		totalRenew[i][j] += Renew[i][j]
@@ -375,7 +370,7 @@ def processYear( year ):
 		for m in range(2, 13):
 			# Renew, All = processMonth(year, m)
 			monthArray = processMonth(year, m)
-			np.append(yearArray, monthArray, axis=0)
+			yearArray = np.append(yearArray, monthArray, axis=0)
 			# for i in range(0, 24):
 			# 	for j in range(0, 7):
 			# 		totalRenew[i][j] += Renew[i][j]
@@ -449,7 +444,7 @@ if year == None:  # Aggregate all data
 	for y in range(2011, currYear):
 		# Renew, All = processYear(y)
 		yearArray = processYear(y)
-		np.append(totalArray, yearArray, axis=0)
+		totalArray = np.append(totalArray, yearArray, axis=0)
 		# for i in range(0, 24):
 		# 	for j in range(0, 7):
 		# 		totalRenew[i][j] += Renew[i][j]
